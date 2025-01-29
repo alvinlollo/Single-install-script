@@ -9,6 +9,7 @@ If you don't like the configurations fork this and edit to you liking.
 
 Please consider staring this project. It helps me see how important this is for everyone.
 
+## Usage
 To use this script paste the following in the Linux terminal:
 
 ```sh
