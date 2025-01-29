@@ -15,4 +15,4 @@ To use this script paste the following in the Linux terminal:
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/install-script | sudo bash
 ```
 
-If you have any issues please add one.
+If you have any issues please add one in the issues tab.
