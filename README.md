@@ -3,3 +3,8 @@
 This script automatically installs you favourite Linux applications such as:
 Docker, Homebrew, zsh, oh-my-zsh and more to come!
 
+It also installs custom configuration for zsh and it's plugins.
+
+If you don't like the configurations fork this and edit to you liking.
+
+Please consider staring this project. It helps me see how important this is for everyone.
