@@ -106,11 +106,10 @@ set -x
 sudo apt install -y git htop golang hugo figlet irssi cmatrix neofetch cowsay fortune-mod tint tty-clock lolcat hugo libsass1 dpkg npm python3 docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin flatpak gnome-software-plugin-flatpak libcurl4-gnutls-dev bsd-mailx needrestart powermgmt-base accountsservice lynx wget curl evince zsh net-tools --fix-missing
 sudo apt full-upgrade -y
 
-# Add a update-all script
-rm -rf /usr/local/bin/update-all | sudo bash
-sudo touch /usr/local/bin/update-all
+# Add an update-all script
+sudo rm -f /usr/local/bin/update-all
+sudo curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/extras/update-all%20script -o /usr/local/bin/update-all
 sudo chmod +x /usr/local/bin/update-all
-echo "$(curl https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/extras/update-all%20script)" >> /usr/local/bin/update-all
 
 # Done message :)
 echo "Done installing"
