@@ -15,18 +15,6 @@ echo '
     --------------- Single Download script ---------------
 '
 
-# Prints its arguments to stderr and exits with a non-zero value.
-#
-# If no arguments are given, it exits with the current value of $?.
-# If arguments are given, it exits with 1.
-#
-# This function is intended to be used to print error messages.
-die() {
-  rc=$?
-  (( $# )) && printf '%s\n' "$*" >&2
-  exit "$(( rc == 0 ? 1 : rc ))"
-}
-
 # Fail on any command.
 set -eux pipefail
 
@@ -61,7 +49,7 @@ brew install eza fzf gcc thefuck gh
 set +eux
 
 # Install Oh-My-zsh
-sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" || die "zsh might already be installed"
+sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
 # Enable exit on error
 set -eux
