@@ -113,4 +113,4 @@ sudo curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-scri
 sudo chmod +x /usr/local/bin/update-all
 
 # Done message :)
-echo "Done installing"
+echo "Done installing please star my repo: https://github.com/alvinlollo/Single-install-script"
