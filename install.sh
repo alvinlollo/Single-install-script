@@ -39,7 +39,7 @@ brew upgrade
 brew install eza fzf gcc thefuck gh
 
 # Install Oh-My-zsh
-sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" || die "zsh might already be installed"
 
 # Remove old config file
 rm -rf ~/.zshrc
