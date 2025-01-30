@@ -64,27 +64,23 @@ touch ~/.zshrc
 echo "$(curl https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.zshrc)" >> ~/.zshrc
 
 # [zsh-history-substring-search](https://github.com/zsh-users/zsh-history-substring-search)
-if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search ] 
-then
+if [ ! -d ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search ]; then
     git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
 fi
 
 # [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
-if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions ]
-then
+if [ ! -d ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions ];then
     git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
 fi
 
 # [zsh-eza](https://github.com/z-shell/zsh-eza)
-if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-eza ]
-then
+if [ ! -d ~/.oh-my-zsh/custom/plugins/zsh-eza ]; then
     git clone https://github.com/z-shell/zsh-eza.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-eza
 fi
 
 # [fzf-zsh-plugin](https://github.com/unixorn/fzf-zsh-plugin)
-if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin ]
-then
-git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin
+if [ ! -d ~/.oh-my-zsh/custom/plugins/fzf-zsh-plugin ]; then
+    git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin
 fi
 
 # Setup fzf
