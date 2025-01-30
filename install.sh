@@ -25,9 +25,13 @@ sudo apt install -y git-core zsh curl git build-essential
 # Do not print commands
 set +x
 
-# Install docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
+read -p "Run get-docker.sh? [Y/N]: " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # Install docker
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+fi
 
 # Install Homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
