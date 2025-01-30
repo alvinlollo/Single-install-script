@@ -83,9 +83,13 @@ curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/re
 # Setup fzf
 mkdir -p ~/.fzf/shell
 touch ~/.fzf/shell/key-bindings.zsh
-source ~/.zshrc
-source ~/.zshrc
-source ~/.zshrc
+
+# Source .zshrc three times only if fzf has not been initialized
+if [ ! -f ~/.fzf/shell/key-bindings.zsh ]; then
+    for i in {1..3}; do
+        source ~/.zshrc
+    done
+fi
 
 # Do not print commands
 set +x
