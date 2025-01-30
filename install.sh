@@ -20,7 +20,6 @@ set -eux pipefail
 
 # Install prequisites
 sudo apt update
-sudo apt upgrade
 sudo apt install -y git-core zsh curl git build-essential
 
 # Do not print commands
