@@ -14,6 +14,22 @@ echo '
 
     --------------- Single Download script ---------------
 '
+
+# Prints its arguments to stderr and exits with a non-zero value.
+#
+# If no arguments are given, it exits with the current value of $?.
+# If arguments are given, it exits with 1.
+#
+# This function is intended to be used to print error messages.
+die() {
+  local rc=$?
+  if (( $# > 0 )); then
+    printf '%s\n' "$@" >&2
+    rc=1
+  fi
+  exit "$rc"
+}
+
 # Fail on any command.
 set -eux pipefail
 
