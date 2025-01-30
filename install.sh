@@ -22,12 +22,9 @@ echo '
 #
 # This function is intended to be used to print error messages.
 die() {
-  local rc=$?
-  if (( $# > 0 )); then
-    printf '%s\n' "$@" >&2
-    rc=1
-  fi
-  exit "$rc"
+  rc=$?
+  (( $# )) && printf '%s\n' "$*" >&2
+  exit "$(( rc == 0 ? 1 : rc ))"
 }
 
 # Fail on any command.
@@ -38,12 +35,18 @@ sudo apt update
 sudo apt upgrade
 sudo apt install git-core zsh curl git build-essential
 
+# Do not print commands
+set +x
+
 # Install docker
 curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
 
 # Install Homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Print commands
+set -x
 
 echo >> ~/.bashrc
 echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
@@ -54,8 +57,14 @@ brew update
 brew upgrade
 brew install eza fzf gcc thefuck gh
 
+# Disable exit on error 
+set +eux
+
 # Install Oh-My-zsh
 sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" || die "zsh might already be installed"
+
+# Enable exit on error
+set -eux
 
 # Remove old config file
 rm -rf ~/.zshrc
@@ -84,11 +93,17 @@ source ~/.zshrc
 source ~/.zshrc
 source ~/.zshrc
 
+# Do not print commands
+set +x
+
 # Install code server
 curl -fsSL https://code-server.dev/install.sh | sh
 
 # Install GEF
 bash -c "$(curl -fsSL https://gef.blah.cat/sh)"
+
+# Do not print commands
+set -x
 
 # Install personal apt packages
 sudo apt install git htop golang hugo figlet irssi cmatrix neofetch cowsay fortune-mod tint tty-clock lolcat hugo libsass1 dpkg npm python3 docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin flatpak gnome-software-plugin-flatpak libcurl4-gnutls-dev bsd-mailx needrestart powermgmt-base accountsservice lynx wget curl evince zsh net-tools --fix-missing
