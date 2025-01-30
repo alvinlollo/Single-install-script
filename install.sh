@@ -21,7 +21,7 @@ set -eux pipefail
 # Install prequisites
 sudo apt update
 sudo apt upgrade
-sudo apt install git-core zsh curl git build-essential
+sudo apt install -y git-core zsh curl git build-essential
 
 # Do not print commands
 set +x
@@ -48,8 +48,10 @@ brew install eza fzf gcc thefuck gh
 # Disable exit on error 
 set +eux
 
-# Install Oh-My-zsh
-sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+# Install Oh-My-zsh if not installed
+if [ ! -f ~/.zshrc ]; then
+  sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+fi
 
 # Enable exit on error
 set -eux
@@ -94,7 +96,8 @@ bash -c "$(curl -fsSL https://gef.blah.cat/sh)"
 set -x
 
 # Install personal apt packages
-sudo apt install git htop golang hugo figlet irssi cmatrix neofetch cowsay fortune-mod tint tty-clock lolcat hugo libsass1 dpkg npm python3 docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin flatpak gnome-software-plugin-flatpak libcurl4-gnutls-dev bsd-mailx needrestart powermgmt-base accountsservice lynx wget curl evince zsh net-tools --fix-missing
+sudo apt install -y git htop golang hugo figlet irssi cmatrix neofetch cowsay fortune-mod tint tty-clock lolcat hugo libsass1 dpkg npm python3 docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin flatpak gnome-software-plugin-flatpak libcurl4-gnutls-dev bsd-mailx needrestart powermgmt-base accountsservice lynx wget curl evince zsh net-tools --fix-missing
+sudo apt full-upgrade -y
 
 # Add a update-all script
 rm -rf /usr/local/bin/update-all | sudo bash
