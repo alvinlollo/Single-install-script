@@ -1,9 +1,9 @@
 #!/usr/bin/bash
 
-# Fail on any command.
-set -eux pipefail
+clear
+echo -e "\e[0m\c"
 
-# art is cool man
+# shellcheck disable=SC2016
 echo '
      ____                _       _       _       _ _
     | __ ) _   _    __ _| |_   _(_)_ __ | | ___ | | | ___
@@ -14,6 +14,8 @@ echo '
 
     --------------- Single Download script ---------------
 '
+# Fail on any command.
+set -eux pipefail
 
 # Install prequisites
 sudo apt update
