@@ -48,8 +48,25 @@ brew install eza fzf gcc thefuck gh
 set +eux
 
 # Install Oh-My-zsh if not installed
+#   This will install all the plugins used in our .zshrc file
 if [ ! -f ~/.zshrc ]; then
+  # Installs Oh-My-Zsh
   sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" | sh
+
+  # States plugins for Oh-My-Zsh to be installed
+  plugins=(
+    zsh-history-substring-search
+    zsh-autosuggestions
+    zsh-eza
+    fzf-zsh-plugin
+  )
+
+  # Install plugins
+  for plugin in "${plugins[@]}"; do
+    if [ ! -d "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/$plugin" ]; then
+      git clone "https://github.com/zsh-users/$plugin" "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/$plugin"
+    fi
+  done
 fi
 
 # Enable exit on error
@@ -62,26 +79,6 @@ fi
 
 # Download and replace config file
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.zshrc -o ~/.zshrc
-
-# [zsh-history-substring-search](https://github.com/zsh-users/zsh-history-substring-search)
-if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search ]; then
-    git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
-fi
-
-# [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
-if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions ];then
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-fi
-
-# [zsh-eza](https://github.com/z-shell/zsh-eza)
-if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-eza ]; then
-    git clone https://github.com/z-shell/zsh-eza.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-eza
-fi
-
-# [fzf-zsh-plugin](https://github.com/unixorn/fzf-zsh-plugin)
-if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin ]; then
-    git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin
-fi
 
 # Setup fzf
 mkdir -p ~/.fzf/shell
