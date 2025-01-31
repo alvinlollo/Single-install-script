@@ -28,7 +28,7 @@ echo '
     --------------- Docker Install  ---------------
 
 '
-sh -c "$(curl -fsSL https://get.docker.com)"; break;;
+sh -c "$(curl -fsSL https://get.docker.com)"
 
 
 echo '
