@@ -28,14 +28,8 @@ echo '
     --------------- Docker Install  ---------------
 
 '
-while true; do
-    read -p "Do you wish to install Docker? [Y/N]: " yn
-    case $yn in
-        [Yy]* ) sh -c "$(curl -fsSL https://get.docker.com)"; break;;
-        [Nn]* ) break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
+sh -c "$(curl -fsSL https://get.docker.com)"; break;;
+
 
 echo '
 
