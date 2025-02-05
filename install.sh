@@ -25,14 +25,6 @@ sudo apt install -y git-core zsh curl git build-essential
 set +x
 echo '
 
-    --------------- Docker Install  ---------------
-
-'
-
-
-
-echo '
-
     --------------- Homebrew Install  ---------------
 
 '
