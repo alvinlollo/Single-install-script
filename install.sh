@@ -109,7 +109,7 @@ echo '
 
 '
 # Install code server
-curl -fsSL https://code-server.dev/install.sh | sh
+# curl -fsSL https://code-server.dev/install.sh | sh
 
 set +x
 echo '
