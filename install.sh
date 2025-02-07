@@ -53,6 +53,7 @@ echo '
 # Install Oh-My-zsh if not installed
 #   This will install all the plugins used in our .zshrc file
 if [ ! -f ~/.zshrc ]; then
+  sudo apt install zsh
   # Installs Oh-My-Zsh
   sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" | sh
 
@@ -128,7 +129,7 @@ echo '
 
 '
 # Install personal apt packages
-sudo apt install -y git htop golang hugo figlet irssi cmatrix neofetch cowsay fortune-mod tint tty-clock lolcat hugo libsass1 dpkg npm python3 docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin flatpak gnome-software-plugin-flatpak libcurl4-gnutls-dev bsd-mailx needrestart powermgmt-base accountsservice lynx wget curl evince zsh net-tools --fix-missing
+sudo apt install -y git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools --fix-missing
 
 # Print commands
 set -x
@@ -142,6 +143,12 @@ echo '
 '
 # Print commands
 set -x
+
+echo "Would you like to install CasaOS? [Y/N]: "
+read REPLY
+if [[ $REPLY =~ ^[y]$ ]]; then
+    curl -fsSL https://get.casaos.io | sudo bash
+fi
 
 # Add an update-all script
 sudo rm -f /usr/local/bin/update-all
