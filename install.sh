@@ -23,13 +23,6 @@ sudo apt update
 sudo apt install -y git-core zsh curl git build-essential
 # Do not print commands
 set +x
-echo '
-
-    --------------- Homebrew Install  ---------------
-
-'
-# Install Homebrew
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Print commands
 set -x
