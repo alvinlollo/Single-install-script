@@ -111,6 +111,7 @@ echo '
     --------------- GEF Install  ---------------
 
 '
+set -x
 # Install GEF
 bash -c "$(curl -fsSL https://gef.blah.cat/sh)"
 
@@ -121,6 +122,7 @@ echo '
     --------------- apt packages Install  ---------------
 
 '
+set -x
 # Install personal apt packages
 sudo apt install -y git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools network-manager ssh-import-key --fix-missing
 
