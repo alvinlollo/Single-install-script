@@ -23,9 +23,16 @@ sudo apt update
 sudo apt install -y git-core zsh curl git build-essential
 # Do not print commands
 set +x
+set +eux
+echo '
+
+    --------------- Oh-My-zsh Install  ---------------
+
+'
 
 # Print commands
 set -x
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 echo >> ~/.bashrc
 echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
@@ -37,34 +44,17 @@ brew upgrade
 brew install eza fzf gcc thefuck gh
 
 # Disable exit on error 
-set +eux
-echo '
+sudo apt install zsh -y
 
-    --------------- Oh-My-zsh Install  ---------------
-
-'
-# Install Oh-My-zsh if not installed
-#   This will install all the plugins used in our .zshrc file
-if [ ! -f ~/.zshrc ]; then
-  sudo apt install zsh
-  # Installs Oh-My-Zsh
-  sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" | sh
-
-  # States plugins for Oh-My-Zsh to be installed
-  plugins=(
-    zsh-history-substring-search
-    zsh-autosuggestions
-    zsh-eza
-    fzf-zsh-plugin
-  )
+# Installs Oh-My-Zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
   # Install plugins
-  for plugin in "${plugins[@]}"; do
-    if [ ! -d "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/$plugin" ]; then
-      git clone "https://github.com/zsh-users/$plugin" "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/$plugin"
-    fi
-  done
-fi
+git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+git clone https://github.com/z-shell/zsh-eza ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-eza
+git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin
+
 
 # Enable exit on error
 set -eu
@@ -89,11 +79,10 @@ touch ~/.fzf/shell/key-bindings.zsh
 
 
 # Source .zshrc three times only if fzf has not been initialized
-if [ ! -f ~/.fzf/shell/key-bindings.zsh ]; then
-    for i in {1..3}; do
-        source ~/.zshrc
-    done
-fi
+source ~/.zshrc
+source ~/.zshrc
+source ~/.zshrc
+source ~/.zshrc
 
 # Do not print commands
 set +x
@@ -104,6 +93,7 @@ echo '
 '
 # Install code server
 # curl -fsSL https://code-server.dev/install.sh | sh
+echo "Disabled"
 
 set +x
 echo '
@@ -139,11 +129,13 @@ echo '
 # Print commands
 set -x
 
-echo "Would you like to install CasaOS? [Y/N]: "
-read REPLY
-if [[ $REPLY =~ ^[y]$ ]]; then
-    curl -fsSL https://get.casaos.io | sudo bash
-fi
+#echo "Would you like to install CasaOS? [Y/N]: "
+#read REPLY
+#if [[ $REPLY =~ ^[y]$ ]]; then
+#    curl -fsSL https://get.casaos.io | sudo bash
+#fi
+
+echo "Disabled"
 
 # Add an update-all script
 sudo rm -f /usr/local/bin/update-all
