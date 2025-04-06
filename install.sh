@@ -41,7 +41,7 @@ set -x
 # Prequises from homebrew
 #brew update
 #brew upgrade
-#brew install eza fzf gcc thefuck gh
+#brew install fzf gcc thefuck gh
 
 # Disable exit on error 
 sudo apt install zsh fzf eza -y
