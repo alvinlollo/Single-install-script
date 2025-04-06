@@ -32,19 +32,19 @@ echo '
 
 # Print commands
 set -x
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-echo >> ~/.bashrc
-echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+#echo >> ~/.bashrc
+#echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
+#eval "$(/home/linuxbrew/.linuxbrew/bin/brew #shellenv)"
 
 # Prequises from homebrew
-brew update
-brew upgrade
-brew install eza fzf gcc thefuck gh
+#brew update
+#brew upgrade
+#brew install eza fzf gcc thefuck gh
 
 # Disable exit on error 
-sudo apt install zsh -y
+sudo apt install zsh fzf eza -y
 
 # Installs Oh-My-Zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -114,7 +114,7 @@ echo '
 '
 set -x
 # Install personal apt packages
-sudo apt install -y python3 python-pip git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools network-manager tmux --fix-missing
+sudo apt install -y python3 python3-pip git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools network-manager tmux --fix-missing
 
 # Print commands
 set -x
