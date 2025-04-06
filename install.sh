@@ -66,9 +66,7 @@ echo '
 '
 set -x
 # Backup old config file if it exists
-if [ -f ~/.zshrc ]; then
-    mv ~/.zshrc ~/.zshrc.backup
-fi
+cp .zshrc .zshrc.backup
 
 # Download and replace config file
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.zshrc -o ~/.zshrc
