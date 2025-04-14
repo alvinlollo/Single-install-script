@@ -1,9 +1,6 @@
 #!/usr/bin/bash
 
 clear
-echo -e "\e[0m\c"
-
-# shellcheck disable=SC2016
 echo '
      ____                _       _       _       _ _
     | __ ) _   _    __ _| |_   _(_)_ __ | | ___ | | | ___
@@ -19,20 +16,12 @@ echo '
 set -eux pipefail
 
 # Install prerequisites
-echo "Install prerequisites"
-echo
 sudo apt update
 sudo apt install -y git zsh curl git build-essential whiptail
-echo
-
-# Update system
-echo "Update system"
-echo
 sudo apt full-upgrade -y
-echo
 
 # Do not print commands
-set +x
+set -x
 set +eux
 echo '
 
@@ -40,7 +29,7 @@ echo '
 
 '
 # Print commands
-set -x
+set +x
 
 sudo apt install zsh fzf -y
 
@@ -56,13 +45,13 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:
 
 # Enable exit on error
 set -eu
-set +x
+set -x
 echo '
 
     --------------- Oh-My-zsh plugins  ---------------
 
 '
-set -x
+set +x
 # Backup old config file if it exists
 cp .zshrc .zshrc.backup
 
@@ -74,45 +63,19 @@ mkdir -p ~/.fzf/shell
 touch ~/.fzf/shell/key-bindings.zsh
 
 # Do not print commands
-set +x
-echo '
-
-    --------------- code-server Install  ---------------
-
-'
-# Install code server
-# curl -fsSL https://code-server.dev/install.sh | sh
-echo "Disabled"
-
-set +x
-echo '
-
-    --------------- GEF Install  ---------------
-
-'
 set -x
-# Install GEF
-bash -c "$(curl -fsSL https://gef.blah.cat/sh)"
-
-# Do not print commands
-set +x
 echo '
-
     --------------- apt packages Install  ---------------
 
 '
-set -x
+set +x
 # Install personal apt packages
 sudo apt install -y python3 python3-pip git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools network-manager tmux --fix-missing
 
 # Print commands
-set -x
+set +x
 sudo apt full-upgrade -y
 
-# Add an update-all script
-#sudo rm -f /usr/local/bin/update-all
-#sudo curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/extras/update-all%20script -o /usr/local/bin/update-all
-#sudo chmod +x /usr/local/bin/update-all
 
 # Do not print commands
 set +x
