@@ -50,8 +50,8 @@ done
 # Function to get user selections
 get_user_selection() {
     local selections
-    # Use --output-fd 3 to capture output correctly and 3>&1 1>&2 2>&3 for proper fd redirection
-    selections=$(whiptail "${whiptail_command[@]}" --output-fd 3 3>&1 1>&2 2>&3)
+    # Execute whiptail and capture the output
+    selections=$( "${whiptail_command[@]}" )
 
     if [ $? -ne 0 ]; then
         echo "INFO No options selected. Exiting."
