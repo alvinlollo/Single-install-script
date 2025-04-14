@@ -46,8 +46,8 @@ log_message() {
 
 # Function to present options and get user selection
 get_user_selection() {
-    local options=("Homebrew" "Oh-My-Zsh" "GEF" "apt Packages" "Casa Os" "Extra scripts")
-    local descriptions=("Installs homebrew using their install script" "Installs Oh-My-Zsh with plugins and configurations" "Installs GEF (https://github.com/hugsy/gef)" "Installs packages and utilities" "Installs CasaOs using install script" "Installs extra scripts see readme")
+    local options=("Homebrew" "Oh-My-Zsh" "GEF" "apt Packages" "Casa Os" "Docker")
+    local descriptions=("Installs homebrew using their install script" "Installs Oh-My-Zsh with plugins and configurations" "Installs GEF (https://github.com/hugsy/gef)" "Installs packages and utilities" "Installs CasaOs using install script" "Installs Docker with install script")
     local selections=()
     local choice
     
@@ -138,11 +138,8 @@ execute_commands() {
                 log_message "${INFO} Executing commands for Casa Os"
                 curl -fsSL https://get.casaos.io | sudo bash
                 ;;
-            "Extra scripts")
-                # Add an update-all script
-                sudo rm -f /usr/local/bin/update-all
-                sudo curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/extras/update-all%20script -o /usr/local/bin/update-all
-                sudo chmod +x /usr/local/bin/update-all
+            "Docker")
+                curl -fsSL https://test.docker.com | sh
                 ;;
             *)
                 log_message "${WARN} Unknown option: $option"
