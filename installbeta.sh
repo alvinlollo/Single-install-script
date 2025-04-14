@@ -30,45 +30,41 @@ echo
 
 # Build whiptail command
 
-local whiptail_command=(
+whiptail_command=(
     whiptail --title "Select Options" --checklist "Choose options to install" 28 85 20
 )
 
 whiptail_command+=(
     "Homebrew" "Installs homebrew using the install script" "OFF"
     "Oh-My-Zsh" "Installs Oh-My-Zsh with plugins and configurations" "ON"
-    "GEF" "Installs GEF (https://github.com/hugsy/gef)" "OFF"
+    "GEF" "Installs GEF (https://github.com/hugsy/gef/)" "OFF"
     "apt Packages" "Installs packages and utilities" "ON"
     "Casa Os" "Installs CasaOs using the install script" "OFF"
     "Docker" "Installs Docker with install script" "OFF"
 )
 
-
-    # Execute whiptail and capture the result
-    local selected_values
+# Function to get user selections
+get_user_selection() {
+    local selections
     selections=$(whiptail "${whiptail_command[@]}" --output-fd 3 3>&1 1>&2 2>&1)
-    local result=$?
 
-    if [ "$result" -ne 0 ]; then
+    if [ $? -ne 0 ]; then
         echo "INFO No options selected. Exiting."
         exit 1
     fi
 
-    # Strip the quotes and trim spaces if necessary (sanitize the input)
-    selected_options=$(echo "$selected_options" | tr -d '"' | tr -s ' ')
-
-    # Convert selected options into an array (preserving spaces in values)
-    IFS=' ' read -r -a options <<< "$selected_options"
+    echo "$selections"
 }
 
 # Function to execute commands based on user selection
 execute_commands() {
+    local options=("$@")  # Get options as an array
 
-    for option in "${selected_options[@]}"; do
+    for option in "${options[@]}"; do
         case "$option" in
             "Homebrew")
                 echo "INFO Executing commands for Homebrew"
-                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
                 brew update
                 brew upgrade
                 brew install fzf gcc eza thefuck gh
@@ -77,14 +73,14 @@ execute_commands() {
                 echo "INFO Executing commands for Oh-My-Zsh"
                 sudo apt install zsh fzf -y
                 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-                
+
                 # Installs plugins
                 git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
                 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
                 git clone https://github.com/z-shell/zsh-eza ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-eza
                 git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin
                 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-                
+
                 echo "INFO Configuring Oh-MyZsh"
                 # Backup old config file if it exists
                 cp .zshrc .zshrc.backup
@@ -126,9 +122,11 @@ echo "INFO Starting the installation process..."
 # Get user selections
 selected_options=$(get_user_selection)
 
+#  Convert selected options into an array (splitting by spaces)
+IFS=' ' read -r -a options <<< "$selected_options"
+
 # Execute commands based on selections
-execute_commands $selected_options
+execute_commands "${options[@]}"
 
 echo "INFO Installation process completed."
-
 exit 0
