@@ -6,7 +6,7 @@ echo -e "\e[0m\c"
 # shellcheck disable=SC2016
 echo '
      ____                _       _       _       _ _
-    | __ ) _   _    __ _| |_   _(_)_ __ | | ___ | | | ___
+    |  _ \ _   _    __ _| |_   _(_)_ __ | | ___ | | | ___
     |  _ \| | | |  / _  | \ \ / / |  _ \| |/ _ \| | |/ _ \
     | |_) | |_| | | (_| | |\ V /| | | | | | (_) | | | (_) |
     |____/ \__  |  \__ _|_| \_/ |_|_| |_|_|\___/|_|_|\___/
@@ -33,7 +33,7 @@ whiptail_command=(
     whiptail --title "Select Options" --checklist "Choose options to install" 28 85 20
 )
 
-whiptail_command+=(
+whiptail_options=(
     "homebrew" "Installs homebrew using the install script" "OFF"
     "ohmyzsh" "Installs Oh-My-Zsh with plugins and configurations" "ON"
     "gef" "Installs GEF (https://github.com/hugsy/gef/)" "OFF"
@@ -42,9 +42,15 @@ whiptail_command+=(
     "docker" "Installs Docker with install script" "OFF"
 )
 
+# Append options to the whiptail command
+for option in "${whiptail_options[@]}"; do
+    whiptail_command+=("$option")
+done
+
 # Function to get user selections
 get_user_selection() {
     local selections
+    # Use --output-fd 3 to capture output correctly and 3>&1 1>&2 2>&3 for proper fd redirection
     selections=$(whiptail "${whiptail_command[@]}" --output-fd 3 3>&1 1>&2 2>&3)
 
     if [ $? -ne 0 ]; then
@@ -81,9 +87,11 @@ execute_commands() {
                 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 
                 echo "INFO Configuring Oh-MyZsh"
-    
+
                 # Backup old config file if it exists
-                cp .zshrc .zshrc.backup
+                if [ -f ~/.zshrc ]; then
+                    cp ~/.zshrc ~/.zshrc.backup
+                fi
 
                 # Download and replace config file
                 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.zshrc -o ~/.zshrc
@@ -123,8 +131,8 @@ echo "INFO Starting the installation process..."
 # Get user selections
 selected_options=$(get_user_selection)
 
-# Convert selected options into an array (splitting by newline)
-IFS='\n' read -r -a options <<< "$selected_options"
+# Convert selected options into an array (splitting by space)
+IFS=' ' read -r -a options <<< "$selected_options"
 
 # Execute commands based on selections
 execute_commands "${options[@]}"
