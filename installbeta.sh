@@ -28,35 +28,25 @@ echo
 sudo apt full-upgrade -y
 echo
 
-# Function to present options and get user selection
-get_user_selection() {
-    local options=("Homebrew" "Oh-My-Zsh" "GEF" "apt Packages" "Casa Os" "Docker")
-    local descriptions=("Installs homebrew using their install script" "Installs Oh-My-Zsh with plugins and configurations" "Installs GEF (https://github.com/hugsy/gef)" "Installs packages and utilities" "Installs CasaOs using install script" "Installs Docker with install script")
-    local selections=()
-    local choice
-    
-    clear
-    echo "Please select the options you want to execute:"
-    echo "Use SPACEBAR to select/unselect, TAB to navigate, and ENTER to confirm."
-    echo "-------------------------------------------------------------------"
+# Build whiptail command
 
-    # Build the whiptail command
-    local whiptail_options=()
-    whiptail_options+=("--checklist")
-    whiptail_options+=("Choose options:")
-    whiptail_options+=(20)  # Height of the dialog
-    whiptail_options+=(70)  # Width of the dialog
-    whiptail_options+=(6)   # Number of options to display
+local whiptail_command=(
+    whiptail --title "Select Options" --checklist "Choose options to install" 28 85 20
+)
 
-    for i in "${!options[@]}"; do
-        whiptail_options+=("${options[$i]}")
-        whiptail_options+=("${descriptions[$i]}")
-        whiptail_options+=("OFF")  # Initial state (OFF)
-    done
+whiptail_command+=(
+    "Homebrew" "Installs homebrew using the install script" "OFF"
+    "Oh-My-Zsh" "Installs Oh-My-Zsh with plugins and configurations" "ON"
+    "GEF" "Installs GEF (https://github.com/hugsy/gef)" "OFF"
+    "apt Packages" "Installs packages and utilities" "ON"
+    "Casa Os" "Installs CasaOs using the install script" "OFF"
+    "Docker" "Installs Docker with install script" "OFF"
+)
+
 
     # Execute whiptail and capture the result
     local selected_values
-    selected_values=$(whiptail "${whiptail_options[@]}" --output-fd 3 3>&1 1>&2 2>&1)
+    selections=$(whiptail "${whiptail_command[@]}" --output-fd 3 3>&1 1>&2 2>&1)
     local result=$?
 
     if [ "$result" -ne 0 ]; then
@@ -64,17 +54,15 @@ get_user_selection() {
         exit 1
     fi
 
-    IFS=$'\n' read -r -a selections <<< "$selected_values"
+    # Strip the quotes and trim spaces if necessary (sanitize the input)
+    selected_options=$(echo "$selected_options" | tr -d '"' | tr -s ' ')
 
-    echo "Selected options: ${selections[*]}"
-    
-    # Return the selected options
-    echo "${selections[*]}"
+    # Convert selected options into an array (preserving spaces in values)
+    IFS=' ' read -r -a options <<< "$selected_options"
 }
 
 # Function to execute commands based on user selection
 execute_commands() {
-    local selected_options=("$@")
 
     for option in "${selected_options[@]}"; do
         case "$option" in
