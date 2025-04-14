@@ -17,4 +17,10 @@ To use this script paste the following in the Linux terminal:
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/install.sh | bash
 ```
 
+I am working on a beta version of the script with a selection menu, it is untested
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/installbeta.sh | bash
+```
+
 If you have any issues please add one in the issues tab.
