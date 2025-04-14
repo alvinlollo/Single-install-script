@@ -18,9 +18,19 @@ echo '
 # Fail on any command.
 set -eux pipefail
 
-# Install prequisites
+# Install prerequisites
+echo "Install prerequisites"
+echo
 sudo apt update
-sudo apt install -y git zsh curl git build-essential
+sudo apt install -y git zsh curl git build-essential whiptail
+echo
+
+# Update system
+echo "Update system"
+echo
+sudo apt full-upgrade -y
+echo
+
 # Do not print commands
 set +x
 set +eux
@@ -29,22 +39,10 @@ echo '
     --------------- Oh-My-zsh Install  ---------------
 
 '
-
 # Print commands
 set -x
-#/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-#echo >> ~/.bashrc
-#echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
-#eval "$(/home/linuxbrew/.linuxbrew/bin/brew #shellenv)"
-
-# Prequises from homebrew
-#brew update
-#brew upgrade
-#brew install fzf gcc thefuck gh
-
-# Disable exit on error 
-sudo apt install zsh fzf eza -y
+sudo apt install zsh fzf -y
 
 # Installs Oh-My-Zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -118,27 +116,10 @@ sudo apt install -y python3 python3-pip git htop golang figlet irssi cmatrix neo
 set -x
 sudo apt full-upgrade -y
 
-set +x
-echo '
-
-    --------------- apt packages Install  ---------------
-
-'
-# Print commands
-set -x
-
-#echo "Would you like to install CasaOS? [Y/N]: "
-#read REPLY
-#if [[ $REPLY =~ ^[y]$ ]]; then
-#    curl -fsSL https://get.casaos.io | sudo bash
-#fi
-
-echo "Disabled"
-
 # Add an update-all script
-sudo rm -f /usr/local/bin/update-all
-sudo curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/extras/update-all%20script -o /usr/local/bin/update-all
-sudo chmod +x /usr/local/bin/update-all
+#sudo rm -f /usr/local/bin/update-all
+#sudo curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/extras/update-all%20script -o /usr/local/bin/update-all
+#sudo chmod +x /usr/local/bin/update-all
 
 # Do not print commands
 set +x
