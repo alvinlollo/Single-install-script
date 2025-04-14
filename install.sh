@@ -75,10 +75,9 @@ touch ~/.fzf/shell/key-bindings.zsh
 
 
 # Source .zshrc three times only if fzf has not been initialized
-source ~/.zshrc
-source ~/.zshrc
-source ~/.zshrc
-source ~/.zshrc
+zsh
+zsh
+zsh
 
 # Do not print commands
 set +x
