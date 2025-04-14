@@ -64,7 +64,7 @@ plugins=(
 	zsh-autosuggestions
 #	zsh-eza
 	fzf-zsh-plugin
- zsh-syntax-highlighting
+ 	zsh-syntax-highlighting
 	
 )
 
