@@ -28,14 +28,6 @@ echo
 sudo apt full-upgrade -y
 echo
 
-# Define colors for output
-OK="$(tput setaf 2)[OK]$(tput sgr0)"
-ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
-NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
-INFO="$(tput setaf 4)[INFO]$(tput sgr0)"
-WARN="$(tput setaf 1)[WARN]$(tput sgr0)"
-RESET="$(tput sgr0)"
-
 # Function to present options and get user selection
 get_user_selection() {
     local options=("Homebrew" "Oh-My-Zsh" "GEF" "apt Packages" "Casa Os" "Docker")
@@ -68,7 +60,7 @@ get_user_selection() {
     local result=$?
 
     if [ "$result" -ne 0 ]; then
-        echo "${INFO} No options selected. Exiting."
+        echo "INFO No options selected. Exiting."
         exit 1
     fi
 
@@ -87,14 +79,14 @@ execute_commands() {
     for option in "${selected_options[@]}"; do
         case "$option" in
             "Homebrew")
-                echo "${INFO} Executing commands for Homebrew"
+                echo "INFO Executing commands for Homebrew"
                 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)
                 brew update
                 brew upgrade
                 brew install fzf gcc eza thefuck gh
                 ;;
             "Oh-My-Zsh")
-                echo "${INFO} Executing commands for Oh-My-Zsh"
+                echo "INFO Executing commands for Oh-My-Zsh"
                 sudo apt install zsh fzf -y
                 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
                 
@@ -105,7 +97,7 @@ execute_commands() {
                 git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin
                 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
                 
-                echo "${INFO} Configuring Oh-MyZsh"
+                echo "INFO Configuring Oh-MyZsh"
                 # Backup old config file if it exists
                 cp .zshrc .zshrc.backup
 
@@ -119,15 +111,15 @@ execute_commands() {
                 source ~/.zshrc
                 ;;
             "GEF")
-                echo "${INFO} Executing commands for GEF"
+                echo "INFO Executing commands for GEF"
                 bash -c "$(curl -fsSL https://gef.blah.cat/sh)"
                 ;;
             "apt Packages")
-                echo "${INFO} Executing commands for apt Packages"
+                echo "INFO Executing commands for apt Packages"
                 sudo apt install -y python3 python3-pip git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools network-manager tmux --fix-missing
                 ;;
             "Casa Os")
-                echo "${INFO} Executing commands for Casa Os"
+                echo "INFO Executing commands for Casa Os"
                 curl -fsSL https://get.casaos.io | sudo bash
                 ;;
             "Docker")
@@ -141,7 +133,7 @@ execute_commands() {
 }
 
 # Main script logic
-echo "${INFO} Starting the installation process..."
+echo "INFO Starting the installation process..."
 
 # Get user selections
 selected_options=$(get_user_selection)
@@ -149,6 +141,6 @@ selected_options=$(get_user_selection)
 # Execute commands based on selections
 execute_commands $selected_options
 
-echo "${INFO} Installation process completed."
+echo "INFO Installation process completed."
 
 exit 0
