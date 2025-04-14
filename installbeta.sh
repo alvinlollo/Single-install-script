@@ -15,8 +15,8 @@ echo '
     --------------- Single Download script ---------------
 '
 
-# Install prequisites
-echo "Install prequisites"
+# Install prerequisites
+echo "Install prerequisites"
 echo
 sudo apt update
 sudo apt install -y git zsh curl git build-essential whiptail
@@ -29,24 +29,23 @@ sudo apt full-upgrade -y
 echo
 
 # Build whiptail command
-
 whiptail_command=(
     whiptail --title "Select Options" --checklist "Choose options to install" 28 85 20
 )
 
 whiptail_command+=(
-    "Homebrew" "Installs homebrew using the install script" "OFF"
-    "Oh-My-Zsh" "Installs Oh-My-Zsh with plugins and configurations" "ON"
-    "GEF" "Installs GEF (https://github.com/hugsy/gef/)" "OFF"
-    "apt Packages" "Installs packages and utilities" "ON"
-    "Casa Os" "Installs CasaOs using the install script" "OFF"
-    "Docker" "Installs Docker with install script" "OFF"
+    "homebrew" "Installs homebrew using the install script" "OFF"
+    "ohmyzsh" "Installs Oh-My-Zsh with plugins and configurations" "ON"
+    "gef" "Installs GEF (https://github.com/hugsy/gef/)" "OFF"
+    "apt_packages" "Installs packages and utilities" "ON"
+    "casaos" "Installs CasaOs using the install script" "OFF"
+    "docker" "Installs Docker with install script" "OFF"
 )
 
 # Function to get user selections
 get_user_selection() {
     local selections
-    selections=$(whiptail "${whiptail_command[@]}" --output-fd 3 3>&1 1>&2 2>&1)
+    selections=$(whiptail "${whiptail_command[@]}" --output-fd 3 3>&1 1>&2 2>&3)
 
     if [ $? -ne 0 ]; then
         echo "INFO No options selected. Exiting."
@@ -62,14 +61,14 @@ execute_commands() {
 
     for option in "${options[@]}"; do
         case "$option" in
-            "Homebrew")
+            "homebrew")
                 echo "INFO Executing commands for Homebrew"
                 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
                 brew update
                 brew upgrade
                 brew install fzf gcc eza thefuck gh
                 ;;
-            "Oh-My-Zsh")
+            "ohmyzsh")
                 echo "INFO Executing commands for Oh-My-Zsh"
                 sudo apt install zsh fzf -y
                 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -82,6 +81,7 @@ execute_commands() {
                 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 
                 echo "INFO Configuring Oh-MyZsh"
+    
                 # Backup old config file if it exists
                 cp .zshrc .zshrc.backup
 
@@ -94,20 +94,21 @@ execute_commands() {
                 source ~/.zshrc
                 source ~/.zshrc
                 ;;
-            "GEF")
+            "gef")
                 echo "INFO Executing commands for GEF"
                 bash -c "$(curl -fsSL https://gef.blah.cat/sh)"
                 ;;
-            "apt Packages")
+            "apt_packages")
                 echo "INFO Executing commands for apt Packages"
                 sudo apt install -y python3 python3-pip git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools network-manager tmux --fix-missing
                 ;;
-            "Casa Os")
+            "casaos")
                 echo "INFO Executing commands for Casa Os"
                 curl -fsSL https://get.casaos.io | sudo bash
                 ;;
-            "Docker")
-                curl -fsSL https://test.docker.com | sh
+            "docker")
+                echo "INFO Executing commands for Docker"
+                curl -fsSL https://get.docker.com | sh
                 ;;
             *)
                 echo "WARN Unknown option: $option"
@@ -122,7 +123,7 @@ echo "INFO Starting the installation process..."
 # Get user selections
 selected_options=$(get_user_selection)
 
-# Convert selected options into an array (splitting by spaces)
+# Convert selected options into an array (splitting by newline)
 IFS='\n' read -r -a options <<< "$selected_options"
 
 # Execute commands based on selections
