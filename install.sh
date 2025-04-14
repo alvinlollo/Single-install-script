@@ -21,15 +21,14 @@ sudo apt install -y git zsh curl git build-essential whiptail
 sudo apt full-upgrade -y
 
 # Do not print commands
-set -x
-set +eux
+set +x
 echo '
 
     --------------- Oh-My-zsh Install  ---------------
 
 '
 # Print commands
-set +x
+set -x
 
 sudo apt install zsh fzf -y
 
@@ -45,13 +44,13 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:
 
 # Enable exit on error
 set -eu
-set -x
+set +x
 echo '
 
     --------------- Oh-My-zsh plugins  ---------------
 
 '
-set +x
+set -x
 # Backup old config file if it exists
 cp .zshrc .zshrc.backup
 
@@ -63,17 +62,15 @@ mkdir -p ~/.fzf/shell
 touch ~/.fzf/shell/key-bindings.zsh
 
 # Do not print commands
-set -x
+set +x
 echo '
     --------------- apt packages Install  ---------------
 
 '
-set +x
+set -x
 # Install personal apt packages
 sudo apt install -y python3 python3-pip git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools network-manager tmux --fix-missing
 
-# Print commands
-set +x
 sudo apt full-upgrade -y
 
 
