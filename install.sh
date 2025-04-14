@@ -73,12 +73,6 @@ curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/re
 mkdir -p ~/.fzf/shell
 touch ~/.fzf/shell/key-bindings.zsh
 
-
-# Source .zshrc three times only if fzf has not been initialized
-zsh
-zsh
-zsh
-
 # Do not print commands
 set +x
 echo '
