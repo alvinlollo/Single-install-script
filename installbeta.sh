@@ -110,7 +110,7 @@ execute_commands() {
                 curl -fsSL https://test.docker.com | sh
                 ;;
             *)
-                echo "${WARN} Unknown option: $option"
+                echo "WARN Unknown option: $option"
                 ;;
         esac
     done
@@ -122,8 +122,8 @@ echo "INFO Starting the installation process..."
 # Get user selections
 selected_options=$(get_user_selection)
 
-#  Convert selected options into an array (splitting by spaces)
-IFS=' ' read -r -a options <<< "$selected_options"
+# Convert selected options into an array (splitting by spaces)
+IFS='\n' read -r -a options <<< "$selected_options"
 
 # Execute commands based on selections
 execute_commands "${options[@]}"
