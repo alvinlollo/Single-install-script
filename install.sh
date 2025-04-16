@@ -17,7 +17,7 @@ set -eux pipefail
 
 # Install prerequisites
 sudo apt update
-sudo apt install -y git zsh curl git build-essential whiptail
+sudo apt install -y git zsh curl git build-essential whiptail uidmap
 sudo apt full-upgrade -y
 
 # Do not print commands
@@ -76,6 +76,13 @@ curl -fsSL https://get.docker.com | sh
 # Fail on any command.
 set -eux
 
+# Install rootless mode
+sudo sh -eux <<EOF
+# Install newuidmap & newgidmap binaries
+apt-get install -y uidmap
+EOF
+dockerd-rootless-setuptool.sh install
+
 # Do not print commands
 set +x
 echo '
@@ -94,3 +101,4 @@ set +x
 
 # Done message :)
 echo "Done installing please star my repo: https://github.com/alvinlollo/Single-install-script"
+echo "Reboot reccommended, run zsh a few times to fix configurations"
