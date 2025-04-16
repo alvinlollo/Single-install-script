@@ -64,6 +64,21 @@ touch ~/.fzf/shell/key-bindings.zsh
 # Do not print commands
 set +x
 echo '
+    --------------- Docker install  ---------------
+
+'
+set -x
+
+# Do not fail (in case the OS is not supported)
+set +eux
+curl -fsSL https://get.docker.com | sh
+
+# Fail on any command.
+set -eux
+
+# Do not print commands
+set +x
+echo '
     --------------- apt packages Install  ---------------
 
 '
