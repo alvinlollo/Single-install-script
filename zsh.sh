@@ -1,3 +1,25 @@
+#!/usr/bin/bash
+
+clear
+echo '
+     ____                _       _       _       _ _
+    | __ ) _   _    __ _| |_   _(_)_ __ | | ___ | | | ___
+    |  _ \| | | |  / _  | \ \ / / |  _ \| |/ _ \| | |/ _ \
+    | |_) | |_| | | (_| | |\ V /| | | | | | (_) | | | (_) |
+    |____/ \__  |  \__ _|_| \_/ |_|_| |_|_|\___/|_|_|\___/
+            |___/
+
+    --------------- Single Download script ---------------
+'
+
+# Fail on any command.
+set -eux pipefail
+
+# Install prerequisites
+sudo apt update
+sudo apt install -y git zsh curl git build-essential
+sudo apt full-upgrade -y
+
 echo '
 
     --------------- Oh-My-zsh Install  ---------------
