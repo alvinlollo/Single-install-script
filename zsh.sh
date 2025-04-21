@@ -16,9 +16,6 @@ echo '
 set -eux pipefail
 
 # Install prerequisites
-sudo apt update
-sudo apt install -y git zsh curl git build-essential
-sudo apt full-upgrade -y
 
 echo '
 
