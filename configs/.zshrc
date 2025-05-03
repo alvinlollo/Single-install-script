@@ -100,5 +100,5 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # Eza (Better ls)
-alias ls="eza --long --no-time --git --icons=never --no-permissions"
+#alias ls="eza --long --no-time --git --icons=never --no-permissions"
 
