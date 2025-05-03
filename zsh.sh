@@ -20,12 +20,12 @@ set -eux pipefail
 echo '
 
     --------------- Oh-My-zsh Install  ---------------
+    
+    Make sure to install zsh and fzf
 
 '
 # Print commands
 set -x
-
-sudo apt install zsh fzf -y
 
 # Installs Oh-My-Zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
