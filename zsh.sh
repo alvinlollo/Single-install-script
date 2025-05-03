@@ -12,9 +12,6 @@ echo '
     --------------- Single Download script ---------------
 '
 
-# Fail on any command.
-set -eux pipefail
-
 # Install prerequisites
 
 echo '
@@ -30,7 +27,10 @@ set -x
 # Installs Oh-My-Zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-  # Install plugins
+# Fail on any command.
+set -eux pipefail
+
+# Install plugins
 git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 git clone https://github.com/z-shell/zsh-eza ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-eza
