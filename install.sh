@@ -16,9 +16,7 @@ echo '
 set -eux pipefail
 
 # Install prerequisites
-sudo apt update
-sudo apt install -y git zsh curl git build-essential whiptail uidmap
-sudo apt full-upgrade -y
+sudo pacman -Syu git zsh curl git build-essential whiptail uidmap --no-confirm
 
 # Do not print commands
 set +x
@@ -30,7 +28,7 @@ echo '
 # Print commands
 set -x
 
-sudo apt install zsh fzf -y
+sudo pacman -S zsh fzf --no-confirm
 
 # Installs Oh-My-Zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -91,10 +89,16 @@ echo '
 '
 set -x
 # Install personal apt packages
-sudo apt install -y python3 python3-pip git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools network-manager tmux --fix-missing
+sudo pacman -S python3 python3-pip git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools tmux
 
-sudo apt full-upgrade -y
+sudo pacman -S adobe-source-code-pro-fonts amd-ucode asciinema atomicparsley base bc bcachefs-tools blueman bluez-utils brightnessctl btop cava cliphist cowsay cuda-tools cython discord electron faac faad2 fastfetch firefox flatpak fzf gnome-2048 gnome-calculator gnome-chess  gnome-clocks gnome-disk-utility gnome-font-viewer gnome-online-accounts gnome-remote-desktop gnome-system-monitor gnome-weather gobject-introspection grub gst-plugins-base gst-plugins-ugly gst-python gtk-engine-murrine htop hypridle hyprland hyprlock hyprpolkitagent inxi jfsutils jq kdeconnect kitty kvantum libde265 libmp4v2 libmpcdec libreoffice-fresh libtorrent libva-nvidia-driver loupe lsd lutris lxc magic-wormhole mercurial micro mousepad mplayer mpv-mpris nano nvidia-dkms nvtop nwg-displays nwg-look obsidian pacman-contrib pamixer pavucontrol proton-pass-bin proton-vpn-gtk-app python-build python-hatchling python-installer python-pyquery python-wxpython qalculate-gtk qbittorrent qt5ct qt6ct rofi-wayland rust scdoc schroedinger screenfetch sddm sof-firmware swappy swaync swww syncthing ttf-fantasque-nerd ttf-fira-code ttf-jetbrains-mono ttf-jetbrains-mono-nerd typescript umockdev uriparser virtualbox waybar wayvnc wine yad zram-generator zsh-completions
 
+sudo pacman -S --needed git base-devel
+git clone https://aur.archlinux.org/yay.git
+cd yay
+makepkg -si
+
+yay -S asciinema-agg asciinema-agg-debug celt celt-debug cloudflare-warp-bin cloudflare-warp-bin-debug davs2 davs2-debug lib32-blas lib32-lzo lib32-lzo-debug mingw-w64-tools mingw-w64-tools-debug proton-pass-bin proton-pass-bin-debug python-ufonormalizer steam-devices-git websockify websockify-debug xwaylandvideobridge xwaylandvideobridge-debug zen-browser-bin
 
 # Do not print commands
 set +x
