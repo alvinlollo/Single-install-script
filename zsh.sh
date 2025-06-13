@@ -56,3 +56,5 @@ curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/re
 # Setup fzf
 mkdir -p ~/.fzf/shell
 touch ~/.fzf/shell/key-bindings.zsh
+
+chsh -s $(which zsh)
