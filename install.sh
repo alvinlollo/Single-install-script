@@ -33,7 +33,7 @@ sudo pacman -S zsh fzf --no-confirm
 # Installs Oh-My-Zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-  # Install plugins
+# Install Oh-My-Zsh plugins
 git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 git clone https://github.com/z-shell/zsh-eza ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-eza
@@ -77,23 +77,31 @@ set -eux
 # Install rootless mode
 sudo sh -eux <<EOF
 # Install newuidmap & newgidmap binaries
-apt-get install -y uidmap
+pacman -S uidmap --no-confirm
 EOF
 dockerd-rootless-setuptool.sh install
 
 # Do not print commands
 set +x
 echo '
-    --------------- apt packages Install  ---------------
+    --------------- Homebrew Install  ---------------
 
 '
 set -x
-# Install personal apt packages
-sudo pacman -S python3 python3-pip git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools tmux
 
-sudo pacman -S adobe-source-code-pro-fonts amd-ucode asciinema atomicparsley base bc bcachefs-tools blueman bluez-utils brightnessctl btop cava cliphist cowsay cuda-tools cython discord electron faac faad2 fastfetch firefox flatpak fzf gnome-2048 gnome-calculator gnome-chess  gnome-clocks gnome-disk-utility gnome-font-viewer gnome-online-accounts gnome-remote-desktop gnome-system-monitor gnome-weather gobject-introspection grub gst-plugins-base gst-plugins-ugly gst-python gtk-engine-murrine htop hypridle hyprland hyprlock hyprpolkitagent inxi jfsutils jq kdeconnect kitty kvantum libde265 libmp4v2 libmpcdec libreoffice-fresh libtorrent libva-nvidia-driver loupe lsd lutris lxc magic-wormhole mercurial micro mousepad mplayer mpv-mpris nano nvidia-dkms nvtop nwg-displays nwg-look obsidian pacman-contrib pamixer pavucontrol proton-pass-bin proton-vpn-gtk-app python-build python-hatchling python-installer python-pyquery python-wxpython qalculate-gtk qbittorrent qt5ct qt6ct rofi-wayland rust scdoc schroedinger screenfetch sddm sof-firmware swappy swaync swww syncthing ttf-fantasque-nerd ttf-fira-code ttf-jetbrains-mono ttf-jetbrains-mono-nerd typescript umockdev uriparser virtualbox waybar wayvnc wine yad zram-generator zsh-completions
+# Do not print commands
+set +x
+echo '
+    --------------- packages Install  ---------------
 
-sudo pacman -S --needed git base-devel
+'
+set -x
+# Install personal packages
+sudo pacman -S figlet irssi cmatrix neofetch cowsay fortune-mod samba cifs-utils tty-clock lolcat libsass1 dpkg npm lynx wget tmux asciinema cava btop micro obsidian syncthing wine --no-confirm
+
+sudo pacman -S adobe-source-code-pro-fonts amd-ucode asciinema atomicparsley base bc bcachefs-tools blueman bluez-utils brightnessctl btop cava cliphist cowsay cuda-tools cython discord electron faac faad2 fastfetch firefox flatpak fzf gnome-2048 gnome-calculator gnome-chess  gnome-clocks gnome-disk-utility gnome-font-viewer gnome-online-accounts gnome-remote-desktop gnome-system-monitor gnome-weather gobject-introspection grub gst-plugins-base gst-plugins-ugly gst-python gtk-engine-murrine htop hypridle hyprland hyprlock hyprpolkitagent inxi jfsutils jq kdeconnect kitty kvantum libde265 libmp4v2 libmpcdec libreoffice-fresh libtorrent libva-nvidia-driver loupe lsd lutris lxc magic-wormhole mercurial mousepad mplayer mpv-mpris nano nvidia-dkms nvtop nwg-displays nwg-look obsidian pacman-contrib pamixer pavucontrol proton-pass-bin proton-vpn-gtk-app python-build python-hatchling python-installer python-pyquery python-wxpython qalculate-gtk qbittorrent qt5ct qt6ct rofi-wayland rust scdoc schroedinger screenfetch sddm sof-firmware swappy swaync swww syncthing ttf-fantasque-nerd ttf-fira-code ttf-jetbrains-mono ttf-jetbrains-mono-nerd typescript umockdev uriparser virtualbox waybar wayvnc wine yad zram-generator zsh-completions --no-confirm
+
+sudo pacman -S git base-devel --no-confirm --needed
 git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si
