@@ -11,8 +11,12 @@ echo '
     --------------- ZSH Install Script ---------------
 '
 
+# Do not exit on fail
+set +eux
+
 # Install prerequisites
 sudo pacman -S zsh fzf --no-confirm
+sudo apt zsh fzf -y # Just try if debian based
 
 # Do not print commands
 set +x
@@ -23,8 +27,6 @@ echo '
 '
 # Print commands
 set -x
-
-sudo pacman -S zsh fzf --no-confirm
 
 # Installs Oh-My-Zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
