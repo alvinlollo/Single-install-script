@@ -1,23 +1,23 @@
-# If you come from bash you might have to change your $PATH.
+# If you come from bash, you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
   export ZSH=~/.oh-my-zsh
 
-# Set name of the theme to load. Optionally, if you set this to "random"
-# it'll load a random theme each time that oh-my-zsh is loaded.
+# Set the name of the theme to load. If you set this to "random"
+# It'll load a random theme each time that oh-my-zsh is loaded.
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
-ZSH_THEME="gnzh"
+  ZSH_THEME="gnzh"
 
-# Set list of themes to load
+# Set the list of themes to load
 # Setting this variable when ZSH_THEME=random
-# cause zsh load theme from this variable instead of
+# cause zsh to load the theme from this variable instead of
 # looking in ~/.oh-my-zsh/themes/
-# An empty array have no effect
+# An empty array has no effect
 # ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
 
 # Uncomment the following line to use case-sensitive completion.
-CASE_SENSITIVE="true"
+  CASE_SENSITIVE="true"
 
 # Uncomment the following line to use hyphen-insensitive completion. Case
 # sensitive completion must be off. _ and - will be interchangeable.
@@ -26,13 +26,13 @@ CASE_SENSITIVE="true"
 # Uncomment the following line to disable bi-weekly auto-update checks.
 # DISABLE_AUTO_UPDATE="true"
 
-# Uncomment the following line to change how often to auto-update (in days).
+# Uncomment the following line to change how often auto-update (in days) is used.
 # export UPDATE_ZSH_DAYS=13
 
-# Uncomment the following line to disable colors in ls.
+# Uncomment the following line to disable colours in ls.
 # DISABLE_LS_COLORS="true"
 
-# Uncomment the following line to disable auto-setting terminal title.
+# Uncomment the following line to disable auto-setting the terminal title.
 # DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
@@ -42,7 +42,7 @@ CASE_SENSITIVE="true"
 # COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
+# under VCS as dirty. This makes repository status checks for large repositories
 # much, much faster.
 # DISABLE_UNTRACKED_FILES_DIRTY="true"
 
@@ -51,7 +51,7 @@ CASE_SENSITIVE="true"
 # The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
 # HIST_STAMPS="mm/dd/yyyy"
 
-# Would you like to use another custom folder than $ZSH/custom?
+# Uncomment the following to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
@@ -72,9 +72,10 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
+  export EDITOR=micro
 # export MANPATH="/usr/local/man:$MANPATH"
 
-# You may need to manually set your language environment
+# You may need to set your language environment manually
 # export LANG=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
