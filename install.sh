@@ -70,7 +70,7 @@ git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si
 
-yay -S asciinema-agg asciinema-agg-debug celt celt-debug cloudflare-warp-bin cloudflare-warp-bin-debug davs2 davs2-debug lib32-blas lib32-lzo lib32-lzo-debug mingw-w64-tools mingw-w64-tools-debug proton-pass-bin proton-pass-bin-debug python-ufonormalizer steam-devices-git websockify websockify-debug xwaylandvideobridge xwaylandvideobridge-debug zen-browser-bin
+yay -S asciinema-agg asciinema-agg-debug celt celt-debug cloudflare-warp-bin cloudflare-warp-bin-debug davs2 davs2-debug dirb lib32-blas lib32-lzo lib32-lzo-debug mingw-w64-tools mingw-w64-tools-debug proton-pass-bin proton-pass-bin-debug python-ufonormalizer steam-devices-git websockify websockify-debug xwaylandvideobridge xwaylandvideobridge-debug zen-browser-bin
 
 # Do not print commands
 set +x
