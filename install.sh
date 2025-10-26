@@ -80,7 +80,7 @@ cp ~/.local/share/nvim{,.bak} -r
 cp ~/.local/state/nvim{,.bak} -r
 cp ~/.cache/nvim{,.bak} -r
 
-git clone https://github.com/LazyVim/starter ~/.config/nvim
+git clone https://github.com/alvinlollo/LazyVim ~/.config/nvim
 
 rm -rf ~/.config/nvim/.git
 
