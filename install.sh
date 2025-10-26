@@ -72,18 +72,6 @@ makepkg -si
 
 yay -S asciinema-agg asciinema-agg-debug celt celt-debug cloudflare-warp-bin cloudflare-warp-bin-debug davs2 davs2-debug dirb lib32-blas lib32-lzo lib32-lzo-debug mingw-w64-tools mingw-w64-tools-debug proton-pass-bin proton-pass-bin-debug python-ufonormalizer steam-devices-git websockify websockify-debug xwaylandvideobridge xwaylandvideobridge-debug zen-browser-bin
 
-# LazyVim Install
-mv ~/.config/nvim{,.bak}
-
-# optional but recommended
-cp ~/.local/share/nvim{,.bak} -r
-cp ~/.local/state/nvim{,.bak} -r
-cp ~/.cache/nvim{,.bak} -r
-
-git clone https://github.com/alvinlollo/LazyVim ~/.config/nvim
-
-rm -rf ~/.config/nvim/.git
-
 # Do not print commands
 set +x
 
