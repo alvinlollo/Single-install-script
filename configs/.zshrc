@@ -72,7 +72,7 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
-  export EDITOR=micro
+  export EDITOR=nvim
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to set your language environment manually
@@ -90,6 +90,88 @@ source $ZSH/oh-my-zsh.sh
 
 # ssh
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
+
+# Define a helper function to check for a command's existence
+_extract_check_cmd() {
+    local cmd="$1"
+    if ! command -v "$cmd" &> /dev/null; then
+        echo "Error: Required command '$cmd' is not installed. Skipping." >&2
+        return 1
+    fi
+    return 0
+}
+
+# The main enhanced extract function
+extract () {
+    # Check if any arguments were provided
+    if [ "$#" -eq 0 ]; then
+        echo "Usage: extract <file> [<file>...]"
+        echo "Supported file types: *.tar, *.tgz, *.tar.gz, *.tar.bz2, *.tar.xz, *.zip, *.rar, *.7z, *.bz2, *.gz, *.xz, *.Z"
+        return 1
+    fi
+
+    local file_path extract_cmd status=0
+    
+    for file_path in "$@"; do
+        # 1. File existence and type check
+        if [ ! -f "$file_path" ]; then
+            echo "Error: '$file_path' is not a valid file or does not exist. Skipping." >&2
+            status=1
+            continue
+        fi
+
+        echo "-> Attempting to extract '$file_path'..."
+        
+        extract_cmd="" # Reset command for the current file
+        
+        # 2. Determine the extraction command
+        case "$file_path" in
+            # Modern TAR: Uses -x for extract, -f for file, and -a (or -I) for auto-compression
+            # Note: The -v (verbose) flag is useful but omitted here for a cleaner script.
+            *.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.xz|*.txz|*.tar.zst|*.tar)
+                if _extract_check_cmd tar; then
+                    # The 'tar xaf' command is often the modern, universal way to extract compressed/uncompressed tar files.
+                    # 'a' (or --auto-compress) determines the compression type automatically.
+                    extract_cmd="tar xaf '$file_path'"
+                fi
+                ;;
+
+            # Standalone Compressed Files
+            *.bz2) _extract_check_cmd bunzip2 && extract_cmd="bunzip2 '$file_path'" ;;
+            *.gz)  _extract_check_cmd gunzip && extract_cmd="gunzip '$file_path'" ;;
+            *.xz)  _extract_check_cmd unxz && extract_cmd="unxz '$file_path'" ;;
+            *.Z)   _extract_check_cmd uncompress && extract_cmd="uncompress '$file_path'" ;;
+
+            # Archives
+            *.zip) _extract_check_cmd unzip && extract_cmd="unzip '$file_path'" ;;
+            *.rar) _extract_check_cmd unrar && extract_cmd="unrar x '$file_path'" ;; # unrar x extracts to current directory
+            *.7z)  _extract_check_cmd 7z && extract_cmd="7z x '$file_path'" ;;
+
+            # Fallback
+            *) 
+                echo "Warning: '$file_path' cannot be extracted via extract() - Unsupported file type." >&2 
+                status=1
+                continue
+                ;;
+        esac
+
+        # 3. Execute the command and check its exit status
+        if [ -n "$extract_cmd" ]; then
+            # Using eval to execute the dynamically constructed command string. 
+            # This is safe here because '$file_path' has been wrapped in single quotes.
+            if eval "$extract_cmd"; then
+                echo "-> Successfully extracted '$file_path'."
+            else
+                echo "Error: Extraction failed for '$file_path' (Command: $extract_cmd)." >&2
+                status=1
+            fi
+        fi
+        
+        echo "" # Add a newline for separation between files
+    done
+    
+    return $status
+}
 
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
