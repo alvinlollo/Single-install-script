@@ -21,7 +21,11 @@ sudo pacman -Syu git zsh curl git build-essential whiptail uidmap
 # Do not exit on fail
 set +eux
 
+# mv ~/.oh-my-zsh ~/OhMyZshOld
+
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | bash
+
+curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/LazyVim.sh | bash
 
 # Do not print commands
 set +x
