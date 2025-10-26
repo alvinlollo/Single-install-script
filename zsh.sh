@@ -15,8 +15,8 @@ echo '
 set +eux
 
 # Install prerequisites
-sudo pacman -S zsh fzf --no-confirm
-sudo apt zsh fzf -y # Just try if debian based
+sudo pacman -S zsh git curl fzf --no-confirm
+sudo apt install git curl zsh fzf -y # Just try if debian based
 
 # Do not print commands
 set +x
