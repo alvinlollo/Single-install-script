@@ -7,3 +7,5 @@ cp ~/.local/state/nvim{,.bak} -r
 cp ~/.cache/nvim{,.bak} -r
 
 git clone https://github.com/alvinlollo/LazyVim ~/.config/nvim
+
+curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/requirements.txt | pip install -r -
