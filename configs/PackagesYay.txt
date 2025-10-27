@@ -145,6 +145,7 @@ python-installer
 python-pyquery
 python-ufonormalizer
 python-wxpython
+python-xyzservices
 qalculate-gtk
 qbittorrent
 qt5ct
