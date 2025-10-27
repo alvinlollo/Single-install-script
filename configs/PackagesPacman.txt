@@ -142,6 +142,7 @@ proton-vpn-gtk-app
 python-build
 python-hatchling
 python-installer
+python-pip
 python-pyquery
 python-ufonormalizer
 python-wxpython
