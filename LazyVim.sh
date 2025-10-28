@@ -1,3 +1,6 @@
+# Install prerequisetes
+sudo pacman -S --needed --noconfirm git curl wget python3 python-pip
+
 # LazyVim Install
 mv ~/.config/nvim{,.bak}
 
@@ -8,4 +11,8 @@ cp ~/.cache/nvim{,.bak} -r
 
 git clone https://github.com/alvinlollo/LazyVim ~/.config/nvim
 
-curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/requirements.txt | pip install -r -
+# Dependencys for Gdoc.vim
+wget https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/requirements.txt
+pip3 install -r requirements.txt --break-system-packages
+
+echo "pip3 install -r requirements.txt"
