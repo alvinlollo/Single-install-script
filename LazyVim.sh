@@ -1,7 +1,32 @@
 # Install prerequisetes
 sudo pacman -S --needed --noconfirm git curl wget python3 python-pip
 
-# LazyVim Install
+# Remove old backups
+if [ -e "~/.config/nvim.bak" ]; then
+    # The path exists (it could be a file, a directory, a symlink, etc.)
+    echo "Path ~/.config/nvim.bak exists. Running command..."
+    rm -rf ~/.config/nvim.bak
+fi
+
+if [ -e "~/.local/share/nvim.bak" ]; then
+    # The path exists (it could be a file, a directory, a symlink, etc.)
+    echo "Path ~/.local/share/nvim.bak exists. Running command..."
+    rm -rf ~/.local/share/nvim.bak
+fi
+
+if [ -e "~/.local/state/nvim.bak" ]; then
+    # The path exists (it could be a file, a directory, a symlink, etc.)
+    echo "Path ~/.local/state/nvim.bak exists. Running command..."
+    rm -rf ~/.local/state/nvim.bak
+fi
+
+if [ -e "~/.cache/nvim.bak" ]; then
+    # The path exists (it could be a file, a directory, a symlink, etc.)
+    echo "Path ~/.cache/nvim.bak exists. Running command..."
+    rm -rf ~/.cache/nvim.bak
+fi
+
+# LazyVim Backup
 mv ~/.config/nvim{,.bak}
 
 # optional but recommended
