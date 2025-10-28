@@ -55,6 +55,8 @@ set -x
 
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm
 
+sudo pacman -S --needed -noconfirm efibootmgr sbsigntools mokutil sbsigntools mokutil sbctl
+
 if ! command -v yay >/dev/null; then
   echo "yay is NOT installed. Running installation commands..."
   git clone https://aur.archlinux.org/yay.git
