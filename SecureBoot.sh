@@ -1,5 +1,5 @@
 # Install Prerequisites
-sudo pacman -S --needed -noconfirm efibootmgr sbsigntools mokutil sbsigntools mokutil sbctl
+sudo pacman -S --needed -noconfirm efibootmgr sbsigntools mokutil sbctl grub
 
 sudo sbctl create-keys
 sudo sbctl enroll-keys --microsoft
