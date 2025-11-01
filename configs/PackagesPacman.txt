@@ -185,6 +185,8 @@ ttf-jetbrains-mono
 ttf-jetbrains-mono-nerd
 ttf-victor-mono
 tumbler
+tor
+torbrowser-launcher
 typescript
 udftools
 umockdev
