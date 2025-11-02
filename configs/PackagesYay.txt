@@ -168,6 +168,7 @@ swappy
 swaylock-effects-git
 swaync
 swww
+spotube-bin
 syncthing
 syslinux
 thunar
