@@ -21,8 +21,6 @@ sudo pacman -Syu git zsh curl git --noconfirm --needed
 # Do not exit on fail
 set +eux
 
-mv ~/.oh-my-zsh ~/OhMyZshOld
-
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | bash
 
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/LazyVim.sh | bash
