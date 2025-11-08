@@ -39,9 +39,6 @@ set -x
 # Disable exit on error
 set +eu
 
-# Move existing oh-my-zsh installation
-mv ~/.oh-my-zsh ~/oh-my-zsh-backup
-
 # Enable exit on error
 set -eu
 
