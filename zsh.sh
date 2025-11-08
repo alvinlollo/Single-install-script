@@ -68,4 +68,5 @@ curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/re
 mkdir -p ~/.fzf/shell
 touch ~/.fzf/shell/key-bindings.zsh
 
+sudo sh -c "echo $(which zsh) >> /etc/shells"
 chsh -s $(which zsh)
