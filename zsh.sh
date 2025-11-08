@@ -36,6 +36,20 @@ echo '
 # Print commands
 set -x
 
+
+# Backup old config file if it exists
+cp .zshrc .zshrc.backup
+
+# Download and replace config file
+curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.zshrc -o ~/.zshrc
+
+# Download generic fzf configuration
+curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.fzf.zsh -o ~/.fzf.zsh
+
+# Setup fzf
+mkdir -p ~/.fzf/shell
+touch ~/.fzf/shell/key-bindings.zsh
+
 # Disable exit on error
 set +eu
 
@@ -57,21 +71,5 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:
 
 # Enable exit on error
 set -eu
-set +x
-echo '
-
-    --------------- Oh-My-zsh plugins  ---------------
-
-'
-set -x
-# Backup old config file if it exists
-cp .zshrc .zshrc.backup
-
-# Download and replace config file
-curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.zshrc -o ~/.zshrc
-
-# Setup fzf
-mkdir -p ~/.fzf/shell
-touch ~/.fzf/shell/key-bindings.zsh
 
 chsh -s $(which zsh)
