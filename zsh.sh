@@ -23,7 +23,7 @@ fi
 
 if command -v apt >/dev/null; then
   echo "apt detected. Installing prerequisites"
-  ssudo apt install git curl zsh fzf -y
+  sudo apt install git curl zsh fzf -y
 fi
 
 # Do not print commands
