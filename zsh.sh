@@ -11,12 +11,20 @@ echo '
     --------------- ZSH Install Script ---------------
 '
 
-# Do not exit on fail
-set +eux
+# Enable exit on error
+set -eu
 
 # Install prerequisites
-sudo pacman -S zsh git curl fzf --no-confirm
-sudo apt install git curl zsh fzf -y # Just try if debian based
+
+if command -v pacman >/dev/null; then
+  echo "pacman detected. Installing prerequisites"
+  sudo pacman -S zsh git curl fzf --no-confirm
+fi
+
+if command -v apt >/dev/null; then
+  echo "apt detected. Installing prerequisites"
+  ssudo apt install git curl zsh fzf -y
+fi
 
 # Do not print commands
 set +x
@@ -28,7 +36,16 @@ echo '
 # Print commands
 set -x
 
-# Installs Oh-My-Zsh
+# Disable exit on error
+set +eu
+
+# Move existing oh-my-zsh installation
+mv ~/.oh-my-zsh ~/oh-my-zsh-backup
+
+# Enable exit on error
+set -eu
+
+# Install oh-my-zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 # Install Oh-My-Zsh plugins
