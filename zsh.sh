@@ -36,6 +36,27 @@ echo '
 # Print commands
 set -x
 
+# Disable exit on error
+set +eu
+
+# Move existing oh-my-zsh installation
+mv ~/.oh-my-zsh ~/oh-my-zsh-backup
+
+# Enable exit on error
+set -eu
+
+# Install oh-my-zsh without entering zsh
+CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
+# Install Oh-My-Zsh plugins
+git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+git clone https://github.com/z-shell/zsh-eza ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-eza
+git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+
+# Enable exit on error
+set -eu
 
 # Backup old config file if it exists
 cp .zshrc .zshrc.backup
@@ -49,27 +70,5 @@ curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/re
 # Setup fzf
 mkdir -p ~/.fzf/shell
 touch ~/.fzf/shell/key-bindings.zsh
-
-# Disable exit on error
-set +eu
-
-# Move existing oh-my-zsh installation
-mv ~/.oh-my-zsh ~/oh-my-zsh-backup
-
-# Enable exit on error
-set -eu
-
-# Install oh-my-zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-# Install Oh-My-Zsh plugins
-git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
-git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-git clone https://github.com/z-shell/zsh-eza ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-eza
-git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-
-# Enable exit on error
-set -eu
 
 chsh -s $(which zsh)
