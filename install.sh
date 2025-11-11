@@ -63,6 +63,9 @@ fi
 
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | yay -S --needed --save --answerclean All --answerdiff All -
 
+# Command will freeze for a while
+sudo npm install -g @google/gemini-cli
+
 # Do not print commands
 set +x
 
