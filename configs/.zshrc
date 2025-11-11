@@ -109,6 +109,18 @@ update () {
 
 }
 
+# Sudo last command with control + u
+
+zle -N sudo-last-command-execute
+sudo-last-command-execute() {
+
+  zle -U $'sudo !!\n'
+
+}
+
+# Bind the widget to Control+U
+bindkey '^U' sudo-last-command-execute
+
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
