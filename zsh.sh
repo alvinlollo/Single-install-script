@@ -18,7 +18,7 @@ set -eu
 
 if command -v pacman >/dev/null; then
   echo "pacman detected. Installing prerequisites"
-  sudo pacman -S zsh git curl fzf --no-confirm
+  sudo pacman -S zsh git curl fzf --noconfirm
 fi
 
 if command -v apt >/dev/null; then
