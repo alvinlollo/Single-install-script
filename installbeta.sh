@@ -1,147 +1,106 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 clear
-echo -e "\e[0m\c"
-
-# shellcheck disable=SC2016
 echo '
      ____                _       _       _       _ _
-    |  _ \ _   _    __ _| |_   _(_)_ __ | | ___ | | | ___
+    | __ ) _   _    __ _| |_   _(_)_ __ | | ___ | | | ___
     |  _ \| | | |  / _  | \ \ / / |  _ \| |/ _ \| | |/ _ \
     | |_) | |_| | | (_| | |\ V /| | | | | | (_) | | | (_) |
-    |____/ \__  |  \__ _|_| \_/ |_|_| |_|_|\___/|_|_|\___/
-            |___/
+    |____/ \__  |  \__ _|_| \_/ |_|_| |_|_|\___/|_|_|\___/ 
+            |___/ 
 
-    --------------- Single Download script ---------------
+    --------------- Single Download script (BETA) --------------- 
 '
 
-# Install prerequisites
-echo "Install prerequisites"
-echo
-sudo apt update
-sudo apt install -y git zsh curl git build-essential whiptail
-echo
-
-# Update system
-echo "Update system"
-echo
-sudo apt full-upgrade -y
-echo
-
-# Build whiptail command
-whiptail_command=(
-    whiptail --title "Select Options" --checklist "Choose options to install" 28 85 20
-)
-
-whiptail_options=(
-    "homebrew" "Installs homebrew using the install script" "OFF"
-    "ohmyzsh" "Installs Oh-My-Zsh with plugins and configurations" "ON"
-    "gef" "Installs GEF (https://github.com/hugsy/gef/)" "OFF"
-    "apt_packages" "Installs packages and utilities" "ON"
-    "casaos" "Installs CasaOs using the install script" "OFF"
-    "docker" "Installs Docker with install script" "OFF"
-)
-
-# Append options to the whiptail command
-for i in "${!whiptail_options[@]}"; do
-    whiptail_command+=("${whiptail_options[$i]}")
-done
-
-# Function to get user selections
-get_user_selection() {
-    local selections
-    # Execute whiptail and capture the output
-    selections=$(whiptail "${whiptail_command[@]}" 2>/dev/null)
-
-    if [ $? -ne 0 ]; then
-        echo "INFO No options selected. Exiting."
-        exit 1
-    fi
-
-    echo "$selections"
+# Function to display error message
+function error_handler() {
+  echo " "
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "An error occurred. Please check the output above for details."
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo " "
 }
 
-# Function to execute commands based on user selection
-execute_commands() {
-    local options=("$@")  # Get options as an array
+# Trap errors
+trap error_handler ERR
 
-    for option in "${options[@]}"; do
-        case "$option" in
-            "homebrew")
-                echo "INFO Executing commands for Homebrew"
-                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || echo "ERROR Failed to install Homebrew"
-                brew update || echo "ERROR Homebrew update failed"
-                brew upgrade || echo "ERROR Homebrew upgrade failed"
-                brew install fzf gcc eza thefuck gh || echo "ERROR Failed to install Homebrew packages"
-                ;;
-            "ohmyzsh")
-                echo "INFO Executing commands for Oh-My-Zsh"
-                sudo apt install zsh fzf -y || echo "ERROR Failed to install zsh and fzf"
-                sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || echo "ERROR Failed to install Oh-My-Zsh"
+#Install prerequisites
+sudo pacman -Syu git zsh curl --noconfirm --needed
 
-                # Installs plugins
-                git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search || echo "ERROR Failed to install zsh-history-substring-search"
-                git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions || echo "ERROR Failed to install zsh-autosuggestions"
-                git clone https://github.com/z-shell/zsh-eza ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-eza || echo "ERROR Failed to install zsh-eza"
-                git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin || echo "ERROR Failed to install fzf-zsh-plugin"
-                git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting || echo "ERROR Failed to install zsh-syntax-highlighting"
+# Ensure whiptail is installed
+if ! command -v whiptail >/dev/null; then
+    echo "whiptail is not installed. Installing it now..."
+    sudo pacman -S --noconfirm whiptail || { echo "Failed to install whiptail. Exiting."; exit 1; }
+fi
 
-                echo "INFO Configuring Oh-MyZsh"
+# Options for the whiptail menu
+OPTIONS=(
+    1 "Run zsh setup script" OFF
+    2 "Run LazyVim setup script" OFF
+    3 "Install Docker" OFF
+    4 "Install Pacman Packages" OFF
+    5 "Install Yay and AUR Packages" OFF
+)
 
-                # Backup old config file if it exists
-                if [ -f ~/.zshrc ]; then
-                    cp ~/.zshrc ~/.zshrc.backup || echo "ERROR Failed to backup .zshrc"
-                fi
+CHOICE=$(whiptail --title "Installation Options" --checklist \
+"Choose components to install:" 20 78 10 \
+    "${OPTIONS[@]}" 3>&1 1>&2 2>&3)
 
-                # Download and replace config file
-                curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.zshrc -o ~/.zshrc || echo "ERROR Failed to download .zshrc"
-                mkdir -p ~/.fzf/shell || echo "ERROR Failed to create .fzf/shell"
-                touch ~/.fzf/shell/key-bindings.zsh || echo "ERROR Failed to create key-bindings.zsh"
-
-                source ~/.zshrc
-                source ~/.zshrc
-                source ~/.zshrc
-                ;;
-            "gef")
-                echo "INFO Executing commands for GEF"
-                bash -c "$(curl -fsSL https://gef.blah.cat/sh)" || echo "ERROR Failed to install GEF"
-                ;;
-            "apt_packages")
-                echo "INFO Executing commands for apt Packages"
-                sudo apt install -y python3 python3-pip git htop golang figlet irssi cmatrix neofetch cowsay fortune-mod tint smartmontools udevil samba cifs-utils mergerfs tty-clock lolcat libsass1 dpkg npm python3 needrestart lynx wget curl zsh net-tools network-manager tmux --fix-missing || echo "ERROR Failed to install apt packages"
-                ;;
-            "casaos")
-                echo "INFO Executing commands for Casa Os"
-                curl -fsSL https://get.casaos.io | sudo bash || echo "ERROR Failed to install CasaOS"
-                ;;
-            "docker")
-                echo "INFO Executing commands for Docker"
-                curl -fsSL https://get.docker.com | sh || echo "ERROR Failed to install Docker"
-                ;;
-            *)
-                echo "WARN Unknown option: $option"
-                ;;
-        esac
-    done
-}
-
-# Main script logic
-echo "INFO Starting the installation process..."
-
-# Get user selections
-selected_options=$(get_user_selection)
-
-# Check if selected_options is empty
-if [ -z "$selected_options" ]; then
-    echo "INFO No options selected. Exiting."
+exitstatus=$?
+if [ $exitstatus = 0 ]; then
+    echo "User selected: $CHOICE"
+else
+    echo "User cancelled installation."
     exit 1
 fi
 
-# Convert selected options into an array (splitting by space)
-IFS=' ' read -r -a options <<< "$selected_options"
+# Fail on any command.
+set -eux pipefail
 
-# Execute commands based on selections
-execute_commands "${options[@]}"
+# Process selected options
+for selection in $CHOICE; do
+    clean_selection=$(echo $selection | tr -d '"')
+    case $clean_selection in
+        "1")
+            echo "Running zsh setup script..."
+            curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | bash
+            ;;
+        "2")
+            echo "Running LazyVim setup script..."
+            curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/LazyVim.sh | bash
+            ;;
+        "3")
+            echo "Installing Docker..."
+            if ! command -v docker >/dev/null; then
+                echo "docker is NOT installed. Running installation commands..."
+                curl -fsSL https://get.docker.com | sh
+                sudo usermod -aG docker $USER
+            else
+                echo "Docker is already installed."
+            fi
+            ;;
+        "4")
+            echo "Installing Pacman Packages..."
+            curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm
+            ;;
+        "5")
+            echo "Installing Yay and Yay Packages..."
+            sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl # These were in the original script before yay install
+            if ! command -v yay >/dev/null; then
+                echo "yay is NOT installed. Running installation commands..."
+                git clone https://aur.archlinux.org/yay.git /tmp/yay_install
+                (cd /tmp/yay_install && makepkg -si --noconfirm)
+                rm -rf /tmp/yay_install
+            else
+                echo "Yay is already installed."
+            fi
+            # Assuming PackagesYay.txt for yay packages, as per common practice
+            curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean All --answerdiff All - --noconfirm
+            ;;
+        *)
+            echo "Invalid option selected: $selection"
+            ;; 
+    esac
+done
 
-echo "INFO Installation process completed."
-exit 0
+echo "Installation process complete."

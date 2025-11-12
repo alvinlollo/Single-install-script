@@ -42,6 +42,7 @@ flatpak
 fortune-mod
 fuse-overlayfs
 fzf
+gemini-cli
 git
 glib2-devel
 gnome-2048
