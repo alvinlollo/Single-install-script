@@ -14,11 +14,8 @@ echo '
 
 # Function to display error message
 function error_handler() {
-  echo " "
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "An error occurred. Please check the output above for details."
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo " "
+  set +x
+  echo -e "An error occurred. Please check the output above for details."
 }
 
 # Trap errors
@@ -35,11 +32,11 @@ fi
 
 # Options for the whiptail menu
 OPTIONS=(
-    1 "Run zsh setup script" OFF
+    1 "Run zsh setup script" ON
     2 "Run LazyVim setup script" OFF
     3 "Install Docker" OFF
-    4 "Install Pacman Packages" OFF
-    5 "Install Yay and AUR Packages" OFF
+    4 "Install Pacman Packages" ON
+    5 "Install Yay and AUR Packages" ON
 )
 
 CHOICE=$(whiptail --title "Installation Options" --checklist \
@@ -55,7 +52,7 @@ else
 fi
 
 # Fail on any command.
-set -eux pipefail
+set -eu pipefail
 
 # Process selected options
 for selection in $CHOICE; do
@@ -81,21 +78,45 @@ for selection in $CHOICE; do
             ;;
         "4")
             echo "Installing Pacman Packages..."
-            curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm
+            if ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm; then
+                echo "--------------------------------------------------------------------"
+                echo "Failed to install Pacman packages. You can try running it manually:"
+                echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm"
+                echo "--------------------------------------------------------------------"
+            fi
             ;;
         "5")
             echo "Installing Yay and Yay Packages..."
-            sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl # These were in the original script before yay install
+            if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl; then # These were in the original script before yay install
+                echo "--------------------------------------------------------------------"
+                echo "Failed to install prerequisite packages for Yay. You can try running it manually:"
+                echo "sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl"
+                echo "--------------------------------------------------------------------"
+            fi
             if ! command -v yay >/dev/null; then
                 echo "yay is NOT installed. Running installation commands..."
-                git clone https://aur.archlinux.org/yay.git /tmp/yay_install
-                (cd /tmp/yay_install && makepkg -si --noconfirm)
+                if ! git clone https://aur.archlinux.org/yay.git /tmp/yay_install; then
+                    echo "--------------------------------------------------------------------"
+                    echo "Failed to clone yay repository. You can try running it manually:"
+                    echo "git clone https://aur.archlinux.org/yay.git /tmp/yay_install"
+                    echo "--------------------------------------------------------------------"
+                elif ! (cd /tmp/yay_install && makepkg -si --noconfirm); then
+                    echo "--------------------------------------------------------------------"
+                    echo "Failed to build and install yay. You can try running it manually:"
+                    echo "cd /tmp/yay_install && makepkg -si --noconfirm"
+                    echo "--------------------------------------------------------------------"
+                fi
                 rm -rf /tmp/yay_install
             else
                 echo "Yay is already installed."
             fi
             # Assuming PackagesYay.txt for yay packages, as per common practice
-            curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean All --answerdiff All - --noconfirm
+            if ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean All --answerdiff All - --noconfirm; then
+                echo "--------------------------------------------------------------------"
+                echo "Failed to install Yay packages. You can try running it manually:"
+                echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean All --answerdiff All - --noconfirm"
+                echo "--------------------------------------------------------------------"
+            fi
             ;;
         *)
             echo "Invalid option selected: $selection"
