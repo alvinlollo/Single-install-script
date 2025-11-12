@@ -22,7 +22,7 @@ function error_handler() {
 trap error_handler ERR
 
 #Install prerequisites
-sudo pacman -Syu git zsh curl --noconfirm --needed
+sudo pacman -Syu git zsh curl wget --noconfirm --needed
 
 # Ensure whiptail is installed
 if ! command -v whiptail >/dev/null; then
