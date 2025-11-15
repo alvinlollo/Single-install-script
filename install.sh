@@ -87,7 +87,7 @@ for selection in $CHOICE; do
             ;;
         "5")
             echo "Installing Yay and Yay Packages..."
-            if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl; then # These were in the original script before yay install
+            if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl; then
                 echo "--------------------------------------------------------------------"
                 echo "Failed to install prerequisite packages for Yay. You can try running it manually:"
                 echo "sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl"
