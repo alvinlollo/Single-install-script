@@ -42,6 +42,8 @@ set +eu
 # Enable exit on error
 set -eu
 
+rm -rf ~/.oh-my-zsh
+
 # Install oh-my-zsh without entering zsh
 CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
