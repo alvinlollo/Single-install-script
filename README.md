@@ -1,7 +1,9 @@
 # Single-install-script
 
-This script automatically installs you favourite Linux applications such as:
-Docker, Homebrew, code server, zsh, GEF, oh-my-zsh and neovim. This uses pacman and yay AUR helper.
+This script automatically installs myfavourite Linux applications such as:
+Docker, Homebrew, zsh, oh-my-zsh and neovim. This uses pacman and yay AUR helper.
+
+Most of this script is intended for arch linux with debian compatablity on the zsh install script only.
 
 It also installs custom configuration for zsh and it's plugins.
 
