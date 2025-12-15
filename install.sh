@@ -24,10 +24,30 @@ trap error_handler ERR
 #Install prerequisites
 sudo pacman -Syu git zsh curl wget whiptail --noconfirm --needed
 
+if command -v pacman >/dev/null; then
+  echo "pacman detected. Installing prerequisites"
+  sudo pacman -Syu git zsh curl wget whiptail --noconfirm --needed
+fi
+
+if command -v apt >/dev/null; then
+  echo "apt detected. Installing prerequisites"
+  sudo apt install git zsh curl wget whiptail -y
+fi
+
 # Ensure whiptail is installed
 if ! command -v whiptail >/dev/null; then
     echo "whiptail is not installed. Installing it now..."
-    sudo pacman -S --noconfirm whiptail || { echo "Failed to install whiptail. Exiting."; exit 1; }
+
+     if command -v pacman >/dev/null; then
+       echo "pacman detected. Installing prerequisites"
+       sudo pacman -S whiptail --noconfirm || { echo "Failed to install whiptail. Exiting."; exit 1; }
+     fi
+     
+     if command -v apt >/dev/null; then
+       echo "apt detected. Installing prerequisites"
+       sudo apt install whiptail -y || { echo "Failed to install whiptail. Exiting."; exit 1; }
+     fi
+     
 fi
 
 # Options for the whiptail menu
