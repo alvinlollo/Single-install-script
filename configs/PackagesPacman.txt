@@ -64,10 +64,6 @@ gst-python
 gvfs
 gvfs-mtp
 htop
-hypridle
-hyprland
-hyprlock
-hyprpolkitagent
 imagemagick
 inxi
 irssi
@@ -81,8 +77,6 @@ libisoburn
 libmp4v2
 libmpcdec
 libreoffice-fresh
-libtorrent
-libva-nvidia-driver
 linux
 linux-firmware
 linux-headers
@@ -179,7 +173,6 @@ wayvnc
 wget
 xarchiver
 xdg-desktop-portal-gtk
-xdg-desktop-portal-hyprland
 xdg-user-dirs
 xfsprogs
 xorg-xhost
