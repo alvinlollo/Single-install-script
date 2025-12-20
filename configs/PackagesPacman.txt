@@ -1,5 +1,6 @@
 adobe-source-code-pro-fonts
-amd-ucode
+tty-clock
+amd
 android-tools
 android-udev
 asciinema
