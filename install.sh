@@ -26,7 +26,7 @@ sudo pacman -Syu git zsh curl wget whiptail --noconfirm --needed
 
 if command -v pacman >/dev/null; then
   echo "pacman detected. Installing prerequisites"
-  sudo pacman -Syu git zsh curl wget whiptail golang fakeroot debugedit --noconfirm --needed
+  sudo pacman -Syu git zsh curl wget whiptail golang fakeroot debugedit make gcc --noconfirm --needed
 fi
 
 if command -v apt >/dev/null; then
