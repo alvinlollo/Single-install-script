@@ -120,6 +120,9 @@ sudo-last-command-execute() {
 # Bind the widget to Control+U
 bindkey '^U' sudo-last-command-execute
 
+# Ydotool
+export YDOTOOL_SOCKET=/tmp/.ydotool_socket
+
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
