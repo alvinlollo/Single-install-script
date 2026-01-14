@@ -24,7 +24,6 @@ cava
 cdrtools
 clamav
 cliphist
-cloudflared
 cmatrix
 code
 cowsay
@@ -56,12 +55,7 @@ gjs
 glib2-devel
 gnome-2048
 gnome-applets
-gnome-calculator
 gnome-calendar
-gnome-calls
-gnome-chess
-gnome-clocks
-gnome-contacts
 gnome-control-center
 gnome-disk-utility
 gnome-font-viewer
@@ -153,7 +147,6 @@ pipewire-jack
 pipewire-pulse
 playerctl
 plocate
-proton-vpn-gtk-app
 python-pip
 python-pyquery
 python-requests
@@ -183,7 +176,6 @@ swaync
 swww
 syncthing
 syslinux
-tailscale
 thunar
 thunar-archive-plugin
 thunar-volman
