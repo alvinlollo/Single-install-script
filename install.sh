@@ -10,6 +10,8 @@ echo '
             |___/ 
 
     --------------- Single Download script (BETA) --------------- 
+BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, THERE IS NO WARRANTY
+FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. See the LICENCE for more detail
 '
 
 # Function to display error message
