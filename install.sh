@@ -9,7 +9,7 @@ echo '
     |____/ \__  |  \__ _|_| \_/ |_|_| |_|_|\___/|_|_|\___/ 
             |___/ 
 
-    --------------- Single Download script (BETA) --------------- 
+    --------------- Single Download script --------------- 
 BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, THERE IS NO WARRANTY
 FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. See the LICENCE for more detail
 '
