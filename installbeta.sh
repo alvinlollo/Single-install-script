@@ -1,5 +1,11 @@
 #!/usr/bin/bash
 
+skip_watermark=false
+if [ "$1" = "--skip-watermark" ]; then
+    skip_watermark=true
+fi
+
+if [ "$skip_watermark" = false ]; then
 clear
 echo '
      ____                _       _       _       _ _
@@ -13,6 +19,7 @@ echo '
 BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, THERE IS NO WARRANTY
 FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. See the LICENCE for more detail
 '
+fi
 
 # Function to display error message
 function error_handler() {
@@ -27,13 +34,13 @@ trap error_handler ERR
 sudo pacman -Syu git zsh curl wget whiptail --noconfirm --needed
 
 if command -v pacman >/dev/null; then
-  echo "pacman detected. Installing prerequisites"
-  sudo pacman -Syu git zsh curl wget whiptail golang fakeroot debugedit make gcc --noconfirm --needed
+    echo "pacman detected. Installing prerequisites"
+    sudo pacman -Syu git zsh curl wget whiptail --noconfirm --needed
 fi
 
 if command -v apt >/dev/null; then
-  echo "apt detected. Installing prerequisites"
-  sudo apt install git zsh curl wget whiptail -y
+    echo "apt detected. Installing prerequisites"
+    sudo apt install git zsh curl wget whiptail -y
 fi
 
 # Ensure whiptail is installed
@@ -41,13 +48,25 @@ if ! command -v whiptail >/dev/null; then
     echo "whiptail is not installed. Installing it now..."
 
      if command -v pacman >/dev/null; then
-       echo "pacman detected. Installing prerequisites"
-       sudo pacman -S whiptail --noconfirm || { echo "Failed to install whiptail. Exiting."; exit 1; }
+        echo "pacman detected. Installing prerequisites"
+        sudo pacman -S whiptail --noconfirm || { echo "Failed to install whiptail. Exiting."; exit 1; }
+        # Reload zsh if it exists
+            if command -v zsh -h >/dev/null; then
+                source ~/.zshrc
+            fi
+        # Reload Bash
+        source ~/.bashrc
      fi
      
      if command -v apt >/dev/null; then
-       echo "apt detected. Installing prerequisites"
-       sudo apt install whiptail -y || { echo "Failed to install whiptail. Exiting."; exit 1; }
+        echo "apt detected. Installing prerequisites"
+        sudo apt install whiptail -y || { echo "Failed to install whiptail. Exiting."; exit 1; }
+        # Reload zsh if it exists
+            if command -v zsh -h >/dev/null; then
+                source ~/.zshrc
+            fi
+        # Reload Bash
+        source ~/.bashrc
      fi
      
 fi
@@ -82,7 +101,7 @@ for selection in $CHOICE; do
     case $clean_selection in
         "1")
             echo "Running zsh setup script..."
-            curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | bash
+            bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh)" --skip-watermark
             ;;
         "2")
             echo "Running LazyVim setup script..."
@@ -95,6 +114,7 @@ for selection in $CHOICE; do
                 curl -fsSL https://get.docker.com | sh
                 sudo usermod -aG docker $USER
             else
+                sudo usermod -aG docker $USER
                 echo "Docker is already installed."
             fi
             ;;
@@ -109,12 +129,20 @@ for selection in $CHOICE; do
             ;;
         "5")
             echo "Installing Yay and Yay Packages..."
-            if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl; then
+            # Check for pacman before installing yay
+            if command -v pacman </dev/null; then
+                echo "Cannot proceed: Not a arch based system"
+                exit
+            fi
+            # Install yay prerequisites
+            if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl golang fakeroot debugedit make gcc; then
                 echo "--------------------------------------------------------------------"
                 echo "Failed to install prerequisite packages for Yay. You can try running it manually:"
-                echo "sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl"
+                echo "sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl golang fakeroot debugedit make gcc"
                 echo "--------------------------------------------------------------------"
+                exit
             fi
+            # Check if yay binary exists
             if ! command -v yay >/dev/null; then
                 echo "yay is NOT installed. Running installation commands..."
                 if ! git clone https://aur.archlinux.org/yay.git /tmp/yay_install; then
@@ -122,21 +150,23 @@ for selection in $CHOICE; do
                     echo "Failed to clone yay repository. You can try running it manually:"
                     echo "git clone https://aur.archlinux.org/yay.git /tmp/yay_install"
                     echo "--------------------------------------------------------------------"
+                    exit
                 elif ! (cd /tmp/yay_install && makepkg -si --noconfirm); then
                     echo "--------------------------------------------------------------------"
                     echo "Failed to build and install yay. You can try running it manually:"
                     echo "cd /tmp/yay_install && makepkg -si --noconfirm"
                     echo "--------------------------------------------------------------------"
+                    exit
                 fi
                 rm -rf /tmp/yay_install
             else
                 echo "Yay is already installed."
             fi
-            # Assuming PackagesYay.txt for yay packages, as per common practice
-            if ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean All --answerdiff All - --noconfirm; then
+            # Install yay packages
+            if ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm; then
                 echo "--------------------------------------------------------------------"
                 echo "Failed to install Yay packages. You can try running it manually:"
-                echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean All --answerdiff All - --noconfirm"
+                echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm"
                 echo "--------------------------------------------------------------------"
             fi
             ;;

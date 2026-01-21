@@ -1,5 +1,11 @@
 #!/usr/bin/bash
 
+skip_watermark=false
+if [ "$1" = "--skip-watermark" ]; then
+    skip_watermark=true
+fi
+
+if [ "$skip_watermark" = false ]; then
 echo '
      ____                _       _       _       _ _
     | __ ) _   _    __ _| |_   _(_)_ __ | | ___ | | | ___
@@ -9,7 +15,13 @@ echo '
             |___/
 
     --------------- ZSH Install Script ---------------
+  BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, THERE IS NO WARRANTY
+  FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. See the LICENCE for more detail
 '
+fi
+
+# Show disclaimer
+echo "This script will backup your current zsh config if it exists "
 
 # Enable exit on error
 set -eu
@@ -39,10 +51,13 @@ set -x
 # Disable exit on error
 set +eu
 
+rm -rf ~/.oh-my-zsh
+
 # Enable exit on error
 set -eu
 
-rm -rf ~/.oh-my-zsh
+# Do not print commands
+set +x
 
 # Install oh-my-zsh without entering zsh
 CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
@@ -54,11 +69,14 @@ git clone https://github.com/z-shell/zsh-eza ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/
 git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 
-# Enable exit on error
-set -eu
+# Disable exit on error
+set +eu
 
 # Backup old config file if it exists
 cp .zshrc .zshrc.backup
+
+# Enable exit on error
+set -eu
 
 # Download and replace config file
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.zshrc -o ~/.zshrc
@@ -71,3 +89,13 @@ mkdir -p ~/.fzf/shell
 touch ~/.fzf/shell/key-bindings.zsh
 
 sudo sh -c "echo $(which zsh) >> /etc/shells"
+
+# Do not print commands
+set +x
+
+echo 'Please run to change default shell: 
+chsh -s /bin/zsh'
+
+# Print commands
+set -x
+sleep 10
