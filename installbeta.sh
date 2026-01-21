@@ -9,7 +9,7 @@ echo '
     |____/ \__  |  \__ _|_| \_/ |_|_| |_|_|\___/|_|_|\___/ 
             |___/ 
 
-    --------------- Single Download script (BETA) --------------- 
+    --------------- Single Download script (Beta) --------------- 
 BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, THERE IS NO WARRANTY
 FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. See the LICENCE for more detail
 '
@@ -24,12 +24,32 @@ function error_handler() {
 trap error_handler ERR
 
 #Install prerequisites
-sudo pacman -Syu git zsh curl --noconfirm --needed
+sudo pacman -Syu git zsh curl wget whiptail --noconfirm --needed
+
+if command -v pacman >/dev/null; then
+  echo "pacman detected. Installing prerequisites"
+  sudo pacman -Syu git zsh curl wget whiptail golang fakeroot debugedit make gcc --noconfirm --needed
+fi
+
+if command -v apt >/dev/null; then
+  echo "apt detected. Installing prerequisites"
+  sudo apt install git zsh curl wget whiptail -y
+fi
 
 # Ensure whiptail is installed
 if ! command -v whiptail >/dev/null; then
     echo "whiptail is not installed. Installing it now..."
-    sudo pacman -S --noconfirm whiptail || { echo "Failed to install whiptail. Exiting."; exit 1; }
+
+     if command -v pacman >/dev/null; then
+       echo "pacman detected. Installing prerequisites"
+       sudo pacman -S whiptail --noconfirm || { echo "Failed to install whiptail. Exiting."; exit 1; }
+     fi
+     
+     if command -v apt >/dev/null; then
+       echo "apt detected. Installing prerequisites"
+       sudo apt install whiptail -y || { echo "Failed to install whiptail. Exiting."; exit 1; }
+     fi
+     
 fi
 
 # Options for the whiptail menu
@@ -89,7 +109,7 @@ for selection in $CHOICE; do
             ;;
         "5")
             echo "Installing Yay and Yay Packages..."
-            if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl; then # These were in the original script before yay install
+            if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl; then
                 echo "--------------------------------------------------------------------"
                 echo "Failed to install prerequisite packages for Yay. You can try running it manually:"
                 echo "sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl"

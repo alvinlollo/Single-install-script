@@ -1,6 +1,10 @@
 # Install prerequisetes
 sudo pacman -S --needed --noconfirm git curl wget python3 python-pip
 
+# Show nvim config replacement
+echo 'This script will move your old nvim config to ~/.local/share/nvim.bak'
+sleep 20 && echo "Use CTRL+C within 20 secconds if you don't want these actions to be made"
+
 # Remove old backups
 if [ -e "~/.config/nvim.bak" ]; then
     # The path exists (it could be a file, a directory, a symlink, etc.)
@@ -38,6 +42,6 @@ git clone https://github.com/alvinlollo/LazyVim ~/.config/nvim
 
 # Dependencys for Gdoc.vim
 wget https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/requirements.txt
-pip3 install -r requirements.txt --break-system-packages
+pip3 install -r requirements.txt --break-system-packages && rm requirements.txt
 
 echo "pip3 install -r requirements.txt"
