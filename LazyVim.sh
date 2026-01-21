@@ -1,9 +1,15 @@
 # Install prerequisetes
+if command -v pacman </dev/null; then
+    echo "Cannot proceed: Not a arch based system"
+    echo "This script does not have debian support"
+    exit
+fi
 sudo pacman -S --needed --noconfirm git curl wget python3 python-pip
 
 # Show nvim config replacement
-echo 'This script will move your old nvim config to ~/.local/share/nvim.bak'
-sleep 20 && echo "Use CTRL+C within 20 secconds if you don't want these actions to be made"
+echo 'This script will move your current nvim config to ~/.config/nvim.bak'
+echo "Press CTRL+C within 20 secconds if you don't want these actions to be made"
+sleep 20
 
 # Remove old backups
 if [ -e "~/.config/nvim.bak" ]; then
@@ -41,7 +47,6 @@ cp ~/.cache/nvim{,.bak} -r
 git clone https://github.com/alvinlollo/LazyVim ~/.config/nvim
 
 # Dependencys for Gdoc.vim
-wget https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/requirements.txt
-pip3 install -r requirements.txt --break-system-packages && rm requirements.txt
-
-echo "pip3 install -r requirements.txt"
+#wget https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/requirements.txt
+#pip3 install -r requirements.txt --break-system-packages && rm requirements.txt
+#echo "pip3 install -r requirements.txt"

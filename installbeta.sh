@@ -120,6 +120,12 @@ for selection in $CHOICE; do
             ;;
         "4")
             echo "Installing Pacman Packages..."
+            # Check if pacman binary is installed
+            if command -v pacman </dev/null; then
+                echo "Cannot proceed: Not a arch based system"
+                exit
+            fi
+            # Install pacman packages
             if ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm; then
                 echo "--------------------------------------------------------------------"
                 echo "Failed to install Pacman packages. You can try running it manually:"
