@@ -106,6 +106,13 @@ update () {
 	    sudo apt update && sudo apt full-upgrade -y
 	fi
 
+	# Update Flatpak
+	if command -v flatpak >/dev/null; then
+	    # Commands to run if the binary IS FOUND
+		echo "✅ 'flatpak' found. Updating."
+	    flatpak update
+	fi
+
 }
 
 # Sudo last command with control + u
