@@ -106,9 +106,9 @@ for selection in $CHOICE; do
         "1")
             echo "Running zsh setup script..."
             # Runs local script unless it does not exist or fails
-            if [[ -f "zsh.sh "]]; then
+            if [[ -f "zsh.sh" ]]; then
                 echo "Found local script, running..."
-                bash zsh.sh --skip-watermark; then
+                bash zsh.sh --skip-watermark
             else
                 bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh)" --skip-watermark
             fi
@@ -118,7 +118,7 @@ for selection in $CHOICE; do
             # Runs local script unless it does not exist or fails
             if [[ -f "LazyVim.sh" ]];then
                 echo "Found local script, running..."
-                bash LazyVim.sh; then
+                bash LazyVim.sh
             else
                 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/LazyVim.sh | bash
             fi
@@ -195,7 +195,7 @@ for selection in $CHOICE; do
             # Runs local script unless it does no exist or fails
             if [[ -f "./config/PackagesYay.txt" ]]; then
                 echo "Found local config"
-                cat ./config/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm; then
+                cat ./config/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm
             elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm; then
                 echo "--------------------------------------------------------------------"
                 echo "Failed to install Yay packages. You can try running it manually:"

@@ -96,7 +96,8 @@ set +x
 
 # If this user's login shell is already "zsh", do not attempt to switch.
 if [ "$(basename -- "$SHELL")" = "zsh" ]; then
-  return
+  echo "Successfully instaled zsh configuration"
+  exit 0 # Exit as success
 fi
 
 if command -v chsh >/dev/null; then
@@ -121,5 +122,4 @@ else
   echo "Shell successfully changed to '$zsh'."
 fi
 
-# Print commands
-set -x
+echo "Successfully installed zsh"
