@@ -16,8 +16,9 @@ echo '
             |___/ 
 
     --------------- Single Download script (Beta) --------------- 
-BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, THERE IS NO WARRANTY
-FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. See the LICENCE for more detail
+BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, 
+THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. 
+See the LICENCE for more detail
 '
 fi
 
@@ -40,6 +41,8 @@ fi
 
 if command -v apt >/dev/null; then
     echo "apt detected. Installing prerequisites"
+    sudo apt update
+    sudo apt full-upgrade -y
     sudo apt install git zsh curl wget whiptail -y
 fi
 
@@ -101,36 +104,54 @@ for selection in $CHOICE; do
     case $clean_selection in
         "1")
             echo "Running zsh setup script..."
-            bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh)" --skip-watermark
+            # Runs local script unless it does not exist or fails
+            if [[ -f "zsh.sh "]]; then
+                echo "Found local script, running..."
+                bash zsh.sh --skip-watermark; then
+            else
+                bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh)" --skip-watermark
+            fi
             ;;
         "2")
             echo "Running LazyVim setup script..."
-            curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/LazyVim.sh | bash
+            # Runs local script unless it does not exist or fails
+            if [[ -f "LazyVim.sh" ]];then
+                echo "Found local script, running..."
+                bash LazyVim.sh; then
+            else
+                curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/LazyVim.sh | bash
+            fi
             ;;
         "3")
             echo "Installing Docker..."
             if ! command -v docker >/dev/null; then
-                echo "docker is NOT installed. Running installation commands..."
+                echo "docker is NOT installed. Installing..."
                 curl -fsSL https://get.docker.com | sh
                 sudo usermod -aG docker $USER
             else
                 sudo usermod -aG docker $USER
                 echo "Docker is already installed."
+                echo "+ sleep 10" && sleep 10
             fi
             ;;
         "4")
             echo "Installing Pacman Packages..."
             # Check if pacman binary is installed
             if command -v pacman </dev/null; then
-                echo "Cannot proceed: Not a arch based system"
-                exit
+                echo "Cannot proceed: pacman binary not found"
+                exit 1 # exit with an error
             fi
             # Install pacman packages
-            if ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm; then
+            # Runs local script unless it does not exit or fails
+            if [[ -f "./configs/PackagesPacman.txt" ]]; then
+                echo "Found local config"
+                cat ./configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm
+            elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm; then
                 echo "--------------------------------------------------------------------"
                 echo "Failed to install Pacman packages. You can try running it manually:"
                 echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm"
                 echo "--------------------------------------------------------------------"
+                echo "+ sleep 10" && sleep 10
             fi
             ;;
         "5")
@@ -138,7 +159,7 @@ for selection in $CHOICE; do
             # Check for pacman before installing yay
             if command -v pacman </dev/null; then
                 echo "Cannot proceed: Not a arch based system"
-                exit
+                exit 1 # Exit with an error
             fi
             # Install yay prerequisites
             if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl golang fakeroot debugedit make gcc; then
@@ -146,7 +167,7 @@ for selection in $CHOICE; do
                 echo "Failed to install prerequisite packages for Yay. You can try running it manually:"
                 echo "sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl golang fakeroot debugedit make gcc"
                 echo "--------------------------------------------------------------------"
-                exit
+                exit 1 # exit with an error
             fi
             # Check if yay binary exists
             if ! command -v yay >/dev/null; then
@@ -156,24 +177,29 @@ for selection in $CHOICE; do
                     echo "Failed to clone yay repository. You can try running it manually:"
                     echo "git clone https://aur.archlinux.org/yay.git /tmp/yay_install"
                     echo "--------------------------------------------------------------------"
-                    exit
+                    exit 1 # exit with an error
                 elif ! (cd /tmp/yay_install && makepkg -si --noconfirm); then
                     echo "--------------------------------------------------------------------"
                     echo "Failed to build and install yay. You can try running it manually:"
                     echo "cd /tmp/yay_install && makepkg -si --noconfirm"
                     echo "--------------------------------------------------------------------"
-                    exit
+                    exit 1 # exit with an error
                 fi
                 rm -rf /tmp/yay_install
             else
                 echo "Yay is already installed."
             fi
             # Install yay packages
-            if ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm; then
+            # Runs local script unless it does no exist or fails
+            if [[ -f "./config/PackagesYay.txt" ]]; then
+                echo "Found local config"
+                cat ./config/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm; then
+            elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm; then
                 echo "--------------------------------------------------------------------"
                 echo "Failed to install Yay packages. You can try running it manually:"
                 echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm"
                 echo "--------------------------------------------------------------------"
+                echo "+ sleep 10" && sleep 10
             fi
             ;;
         *)

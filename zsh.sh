@@ -62,6 +62,9 @@ set +x
 # Install oh-my-zsh without entering zsh
 CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
+# Print commands
+set -x
+
 # Install Oh-My-Zsh plugins
 git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
@@ -73,7 +76,7 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:
 set +eu
 
 # Backup old config file if it exists
-cp .zshrc .zshrc.backup
+cp .zshrc .zshrc{,.bak} -r
 
 # Enable exit on error
 set -eu
@@ -88,14 +91,35 @@ curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/re
 mkdir -p ~/.fzf/shell
 touch ~/.fzf/shell/key-bindings.zsh
 
-sudo sh -c "echo $(which zsh) >> /etc/shells"
-
 # Do not print commands
 set +x
 
-echo 'Please run to change default shell: 
-chsh -s /bin/zsh'
+# If this user's login shell is already "zsh", do not attempt to switch.
+if [ "$(basename -- "$SHELL")" = "zsh" ]; then
+  return
+fi
+
+if command -v chsh >/dev/null; then
+  echo "chsh command does not exist."
+  echo "Please change your shell manually"
+  sleep 5 && exit 0
+fi
+
+echo "Changing your shell to $zsh..."
+
+if ! sudo -k chsh -s "$zsh" "$USER"; then # -k forces password prompt
+  echo "Next command may fail."
+  chsh -s $"(which zsh)" "$USER"  # run chsh normally may fail
+fi
+
+# Check if the shell change was successful
+if [ $? -ne 0 ]; then
+  echo "chsh command unsuccessful. Change your default shell manually:"
+  echo "chsh -s $"(which zsh)" $USER"
+else
+  export SHELL="$zsh"
+  echo "Shell successfully changed to '$zsh'."
+fi
 
 # Print commands
 set -x
-sleep 10

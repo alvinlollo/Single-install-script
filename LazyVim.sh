@@ -2,7 +2,8 @@
 if command -v pacman </dev/null; then
     echo "Cannot proceed: Not a arch based system"
     echo "This script does not have debian support"
-    exit
+    echo "+ sleep 10" && sleep 10
+    exit 1
 fi
 sudo pacman -S --needed --noconfirm git curl wget python3 python-pip
 
