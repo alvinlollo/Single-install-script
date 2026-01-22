@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
+PreviousWD=$(pwd)
 skip_watermark=false
 if [ "$1" = "--skip-watermark" ]; then
     skip_watermark=true
@@ -185,6 +186,7 @@ for selection in $CHOICE; do
                     echo "--------------------------------------------------------------------"
                     exit 1 # exit with an error
                 fi
+                cd $PreviousWD
                 rm -rf /tmp/yay_install
             else
                 echo "Yay is already installed."
