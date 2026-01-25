@@ -138,7 +138,7 @@ for selection in $CHOICE; do
         "4")
             echo "Installing Pacman Packages..."
             # Check if pacman binary is installed
-            if command -v pacman </dev/null; then
+            if command -v pacman >/dev/null; then
                 echo "Cannot proceed: pacman binary not found"
                 exit 1 # exit with an error
             fi
@@ -158,7 +158,7 @@ for selection in $CHOICE; do
         "5")
             echo "Installing Yay and Yay Packages..."
             # Check for pacman before installing yay
-            if command -v pacman </dev/null; then
+            if command -v pacman >/dev/null; then
                 echo "Cannot proceed: Not a arch based system"
                 exit 1 # Exit with an error
             fi
