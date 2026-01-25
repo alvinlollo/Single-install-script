@@ -19,13 +19,8 @@ bluez-utils
 btop
 btrfs-progs
 bully
-cachyos-keyring
-cachyos-mirrorlist
-cachyos-v3-mirrorlist
-cachyos-v4-mirrorlist
 cdrtools
 clamav
-cloudflare-warp-bin
 cmatrix
 code
 cowpatty
@@ -38,7 +33,6 @@ docker
 docker-buildx
 docker-compose
 dosfstools
-downgrade
 dpkg
 efibootmgr
 electron
@@ -56,7 +50,6 @@ firefox
 flatpak
 fortune-mod
 fprintd
-freedownloadmanager
 fuse-overlayfs
 fzf
 git
@@ -107,8 +100,6 @@ libreoffice-fresh
 libspng
 libva-nvidia-driver
 linux
-linux-cachyos-bore
-linux-cachyos-bore-headers
 linux-firmware
 linux-headers
 lolcat
@@ -130,7 +121,6 @@ mpv
 mpv-mpris
 mtools
 nano
-neofetch
 neovim
 net-tools
 network-manager-applet
@@ -168,7 +158,6 @@ reflector
 rofi
 rpi-imager
 rust
-ryujinx
 samba
 sbctl
 sbsigntools
@@ -179,7 +168,6 @@ smbclient
 sof-firmware
 sox
 steam
-swaylock-effects-git
 swaync
 syncthing
 syslinux
@@ -197,7 +185,6 @@ ttf-droid
 ttf-fantasque-nerd
 ttf-fira-code
 ttf-jetbrains-mono
-tty-clock
 tumbler
 udftools
 umockdev
@@ -207,7 +194,6 @@ usb_modeswitch
 uwsm
 v4l2loopback-dkms
 virtualbox
-warp-terminal
 warpinator
 waybar
 wayvnc
@@ -217,9 +203,7 @@ xarchiver
 xfsprogs
 xorg-xeyes
 xorg-xhost
-yay-bin
 yt-dlp
-zen-browser-bin
 zram-generator
 zsh
 zsh-completions
