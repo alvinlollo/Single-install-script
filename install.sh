@@ -164,10 +164,10 @@ for selection in $CHOICE; do
                 exit 1 # Exit with an error
             else
                 # Install yay prerequisites
-                if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl golang fakeroot debugedit make gcc; then
+                if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl go fakeroot debugedit make gcc; then
                     echo "--------------------------------------------------------------------"
                     echo "Failed to install prerequisite packages for Yay. You can try running it manually:"
-                    echo "sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl golang fakeroot debugedit make gcc"
+                    echo "sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl go fakeroot debugedit make gcc"
                     echo "--------------------------------------------------------------------"
                     exit 1 # exit with an error
                 fi
