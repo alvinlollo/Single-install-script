@@ -1,5 +1,5 @@
 # Install prerequisetes
-if command -v pacman </dev/null; then
+if command -v pacman >/dev/null; then
     echo "Cannot proceed: Not a arch based system"
     echo "This script does not have debian support"
     echo "+ sleep 10" && sleep 10
