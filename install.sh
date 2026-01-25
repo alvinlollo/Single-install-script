@@ -110,7 +110,7 @@ for selection in $CHOICE; do
                 echo "Found local script, running..."
                 bash zsh.sh --skip-watermark
             else
-                bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh)" --skip-watermark
+                bash -c "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh)" --skip-watermark
             fi
             ;;
         "2")
