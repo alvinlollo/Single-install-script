@@ -38,6 +38,8 @@ if command -v apt >/dev/null; then
   sudo apt install git curl zsh fzf -y
 fi
 
+zsh=$(which zsh)
+
 # Do not print commands
 set +x
 echo '
@@ -96,7 +98,7 @@ set +x
 
 # If this user's login shell is already "zsh", do not attempt to switch.
 if [ "$(basename -- "$SHELL")" = "zsh" ]; then
-  echo "Successfully instaled zsh configuration"
+  echo "Successfully installed zsh configuration"
   exit 0 # Exit as success
 fi
 
@@ -108,15 +110,16 @@ fi
 
 echo "Changing your shell to $zsh..."
 
-if ! sudo -k chsh -s "$zsh" "$USER"; then # -k forces password prompt
+if ! echo "+ sudo -k chsh -s "$zsh" "$USER"" && sudo -k chsh -s "$zsh" "$USER"; then # -k forces password prompt
   echo "Next command may fail."
+  echo "+ chsh -s $"(which zsh)" "$USER""
   chsh -s $"(which zsh)" "$USER"  # run chsh normally may fail
 fi
 
 # Check if the shell change was successful
 if [ $? -ne 0 ]; then
   echo "chsh command unsuccessful. Change your default shell manually:"
-  echo "chsh -s $"(which zsh)" $USER"
+  echo "chsh -s $"(which zsh)" "$USER""
 else
   export SHELL="$zsh"
   echo "Shell successfully changed to '$zsh'."
