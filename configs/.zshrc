@@ -92,6 +92,7 @@ fi
 
 update () { 
 
+	echo "Update script by alvinlollo"
 	# Update arch based systems with yay AUR helper
 	if command -v pacman >/dev/null && command -v yay >/dev/null; then
 	    echo "✅ 'pacman' and 'yay' found. Updating."
