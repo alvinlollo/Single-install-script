@@ -92,23 +92,27 @@ fi
 
 update () { 
 
-	# Update on arch based systems with yay AUR helper
+	# Update arch based systems with yay AUR helper
 	if command -v pacman >/dev/null && command -v yay >/dev/null; then
-	    # Commands to run if the binaries IS FOUND
 	    echo "✅ 'pacman' and 'yay' found. Updating."
 	    sudo pacman -Syu && yay -Syu
 	fi
 
 	# Update on debian based systems
 	if command -v apt >/dev/null; then
-	    # Commands to run if the binary IS FOUND
 		echo "✅ 'apt' found. Updating."
 	    sudo apt update && sudo apt full-upgrade -y
 	fi
 
+	# Update Hyprland
+	if command -v hyprpm >/dev/null; then
+		echo "✅ 'hyprpm' found. Updating."
+		hyprpm reload && sleep 2
+		hyprpm update
+	fi
+
 	# Update Flatpak
 	if command -v flatpak >/dev/null; then
-	    # Commands to run if the binary IS FOUND
 		echo "✅ 'flatpak' found. Updating."
 	    flatpak update
 	fi
