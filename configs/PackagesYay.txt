@@ -13,6 +13,8 @@ gtk-engine-murrine
 lib32-gtk2
 lib32-blas
 lib32-lzo
+linux-header
+localsend
 mingw-w64-tools
 neofetch
 python-ufonormalizer
