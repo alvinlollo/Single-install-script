@@ -18,10 +18,8 @@ btop
 btrfs-progs
 bully
 cdrtools
-celt
 cifs-utils
 clamav
-cloudflare-warp-bin
 cloudflared
 cmatrix
 code
@@ -36,7 +34,6 @@ dictd
 discord
 docker-buildx
 dosfstools
-downgrade
 dpkg
 efibootmgr
 electron
@@ -55,8 +52,6 @@ figlet
 firefox
 flatpak
 fortune-mod
-fprintd
-freedownloadmanager
 fuse-overlayfs
 fzf
 git
@@ -106,8 +101,6 @@ konsole
 krdc
 krdp
 kvantum
-lib32-blas
-lib32-lzo
 libde265
 libfprint
 libisoburn
@@ -118,7 +111,8 @@ libtorrent
 libva-nvidia-driver
 linux
 linux-firmware
-linux-headers
+linux-header
+localsend
 lolcat
 loupe
 lsd
@@ -132,7 +126,6 @@ man-db
 memtest86+-efi
 mercurial
 micro
-mingw-w64-tools
 mokutil
 mousepad
 mplayer
@@ -140,7 +133,6 @@ mpv-mpris
 mtools
 nano
 nautilus
-neofetch
 neovim
 net-tools
 network-manager-applet
@@ -149,8 +141,6 @@ noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
 ntfs-3g
-nvidia-580xx-dkms
-nvidia-580xx-settings
 nvtop
 nwg-displays
 nwg-look
@@ -170,7 +160,6 @@ python-hatchling
 python-installer
 python-pip
 python-pyquery
-python-ufonormalizer
 python-uv
 python-wxpython
 qalculate-gtk
@@ -183,7 +172,6 @@ reflector
 rofi
 rpi-imager
 rust
-ryujinx
 samba
 sbctl
 sbsigntools
@@ -194,8 +182,6 @@ sddm
 sof-firmware
 sox
 steam
-sunshine
-swaylock-effects-git
 swaync
 syncthing
 syslinux
@@ -213,7 +199,6 @@ ttf-droid
 ttf-fantasque-nerd
 ttf-fira-code
 ttf-jetbrains-mono
-tty-clock
 tumbler
 udftools
 umockdev
@@ -224,8 +209,6 @@ usbguard
 uwsm
 v4l2loopback-dkms
 virtualbox
-warp-terminal
-warpinator
 waybar
 wayvnc
 wgcf
@@ -234,9 +217,7 @@ xarchiver
 xfsprogs
 xorg-xeyes
 xorg-xhost
-yay
 yt-dlp
-zen-browser-bin
 zram-generator
 zsh
 zsh-completions
