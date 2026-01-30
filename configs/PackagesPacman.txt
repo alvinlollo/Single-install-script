@@ -111,8 +111,6 @@ libtorrent
 libva-nvidia-driver
 linux
 linux-firmware
-linux-header
-localsend
 lolcat
 loupe
 lsd
