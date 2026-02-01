@@ -71,7 +71,7 @@ fi
 
 # Install LazyVim
 echo ""
-git clone https://github.com/alvinlollo/LazyVim "$HOME/.config/nvim"
+git clone https://github.com/alvinlollo/LazyVim ~/.config/nvim
 
 # Dependencys for Gdoc.vim
 #wget https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/requirements.txt
