@@ -26,16 +26,18 @@ echo "This script will backup your current zsh config if it exists "
 # Enable exit on error
 set -eu
 
-# Install prerequisites
+# Install prerequisites if installed skips
 
-if command -v pacman >/dev/null; then
-  echo "pacman detected. Installing prerequisites"
-  sudo pacman -S zsh git curl fzf --noconfirm
-fi
+if ! command -v zsh >/dev/null && command -v git >/dev/null && command -v curl >/dev/null && command -v fzf >/dev/null; then
+  if command -v pacman >/dev/null; then
+    echo "pacman detected. Installing prerequisites"
+    sudo pacman -S zsh git curl fzf --noconfirm
+  fi
 
-if command -v apt >/dev/null; then
-  echo "apt detected. Installing prerequisites"
-  sudo apt install git curl zsh fzf -y
+  if command -v apt >/dev/null; then
+    echo "apt detected. Installing prerequisites"
+    sudo apt install git curl zsh fzf -y
+  fi
 fi
 
 zsh=$(which zsh)
