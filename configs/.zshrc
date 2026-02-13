@@ -150,4 +150,4 @@ export YDOTOOL_SOCKET=/tmp/.ydotool_socket
 
 # Eza (Better ls)
 #alias ls="eza --long --no-time --git --icons=never --no-permissions"
-
+alias tree="eza --tree --lonf --git --no-permissions --level"
