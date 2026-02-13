@@ -17,7 +17,11 @@
 # ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
 
 # Uncomment the following line to use case-sensitive completion.
-  CASE_SENSITIVE="true"
+CASE_SENSITIVE="true"
+
+#Zsh autocorrect
+unsetopt correct_all
+
 
 # Uncomment the following line to use hyphen-insensitive completion. Case
 # sensitive completion must be off. _ and - will be interchangeable.
@@ -62,6 +66,7 @@ plugins=(
 	git
 	zsh-history-substring-search
 	zsh-autosuggestions
+ zsh-autocomplete
 #	zsh-eza
 	fzf-zsh-plugin
  	zsh-syntax-highlighting
