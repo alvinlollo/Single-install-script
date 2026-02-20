@@ -122,6 +122,8 @@ update () {
 	    flatpak update -y
 	fi
 
+	omz update
+
 }
 
 tree () {
