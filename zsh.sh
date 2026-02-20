@@ -102,6 +102,7 @@ set +x
 
 # If this user's login shell is already "zsh", do not attempt to switch.
 if [ "$(basename -- "$SHELL")" = "zsh" ]; then
+  echo "You already have zsh as the default shell"
   echo "Successfully installed zsh configuration"
   exit 0 # Exit as success
 fi
