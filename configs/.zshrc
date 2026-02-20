@@ -124,6 +124,16 @@ update () {
 
 }
 
+tree () {
+
+	if [ "$1" >/dev/null ]; then
+		eza --tree --git --no-time --no-permissions --level $1
+	else
+		eza --tree --git --no-time --no-permissions
+	fi
+
+}
+
 # Sudo last command with control + u
 
 zle -N sudo-last-command-execute
@@ -148,6 +158,3 @@ export YDOTOOL_SOCKET=/tmp/.ydotool_socket
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-# Eza (Better ls)
-#alias ls="eza --long --no-time --git --icons=never --no-permissions"
-alias tree="eza --tree --lonf --git --no-permissions --level"
