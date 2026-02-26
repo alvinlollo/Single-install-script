@@ -23,6 +23,7 @@ snapd
 spotube-bin
 ssh-import-id
 sunshine
+syncthingtray-qt6
 ttf-victor-mono
 tty-clock
 tutanota-desktop-bin
