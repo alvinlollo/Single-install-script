@@ -1,5 +1,6 @@
 # If you come from bash, you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
+export PATH=$HOME/bin:/usr/local/bin:$PATH
+export PATH="$HOME/.local/bin:$PATH"
 
 # Path to your oh-my-zsh installation.
   export ZSH=~/.oh-my-zsh
@@ -21,7 +22,6 @@ CASE_SENSITIVE="true"
 
 #Zsh autocorrect
 unsetopt correct_all
-
 
 # Uncomment the following line to use hyphen-insensitive completion. Case
 # sensitive completion must be off. _ and - will be interchangeable.
@@ -96,7 +96,6 @@ fi
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
 
 update () { 
-
 	# Update arch based systems with yay AUR helper
 	if command -v pacman >/dev/null && command -v yay >/dev/null; then
 	    echo "✅ 'pacman' and 'yay' found. Updating."
@@ -136,19 +135,15 @@ update () {
 		sudo npm install -g npm-check-updates
 	fi
 
-
 	omz update
-
 }
 
 tree () {
-
 	if [ "$1" >/dev/null ]; then
 		eza --tree --git --no-time --no-permissions --level $1
 	else
 		eza --tree --git --no-time --no-permissions
 	fi
-
 }
 
 # Sudo last command with control + u
@@ -176,4 +171,5 @@ fi
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+alias lzd="lazydocker"
 alias edit="nvim"
