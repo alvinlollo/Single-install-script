@@ -52,10 +52,10 @@ figlet
 firefox
 flatpak
 fortune-mod
+foliate
 fuse-overlayfs
 fzf
 git
-github-cli
 glib2-devel
 gnome-2048
 gnome-applets
@@ -101,6 +101,7 @@ konsole
 krdc
 krdp
 kvantum
+lazydocker
 libde265
 libfprint
 libisoburn
