@@ -100,7 +100,8 @@ update () {
 	# Update arch based systems with yay AUR helper
 	if command -v pacman >/dev/null && command -v yay >/dev/null; then
 	    echo "✅ 'pacman' and 'yay' found. Updating."
-	    sudo pacman -Syu --noconfirm && yay -Syu --save --answerclean None --answerdiff None --noconfirm
+	    sudo pacman -Syu --noconfirm
+	    yay -Syu --sudoloop --save --answerclean None --answerdiff None --noconfirm
 	elif command -v pacman >/dev/null; then
 		echo "✅ 'pacman' found. Updating."
 		sudo pacman -Syu --noconfirm
