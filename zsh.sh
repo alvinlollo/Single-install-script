@@ -82,7 +82,7 @@ git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git ${ZSH_
 set +eu
 
 # Backup old config file if it exists
-cp .zshrc .zshrc{,.bak} -r
+cp ~/.zshrc ~/.zshrc{,.bak} -r
 
 # Enable exit on error
 set -eu
