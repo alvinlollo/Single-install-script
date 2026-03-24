@@ -2,6 +2,8 @@
 export PATH=$HOME/bin:/usr/local/bin:$PATH
 export PATH="/home/pi/.npm-global/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
+export WAYLAND_DISPLAY=$WAYLAND_DISPLAY
+export XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
 
 # Path to your oh-my-zsh installation.
   export ZSH=~/.oh-my-zsh
@@ -175,3 +177,4 @@ fi
 
 alias lzd="lazydocker"
 alias edit="nvim"
+alias rpi="pkexec /usr/bin/rpi-imager"
