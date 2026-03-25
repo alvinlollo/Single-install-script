@@ -107,7 +107,7 @@ update () {
 	elif command -v pacman >/dev/null; then
 		echo "✅ 'pacman' found. Updating."
 		sudo pacman -Syu --noconfirm
-	if
+	fi
 
 	if command -v paru >/dev/null; then
 		echo "✅ 'flatpak' found. Updating."
