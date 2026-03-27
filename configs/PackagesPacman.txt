@@ -181,6 +181,7 @@ sddm
 sof-firmware
 sox
 steam
+sshfs
 swaync
 syncthing
 syslinux
