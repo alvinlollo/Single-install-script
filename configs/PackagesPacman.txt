@@ -83,7 +83,6 @@ grub
 gst-plugins-base
 gst-plugins-ugly
 gst-python
-gstreamer-vaapi
 gufw
 gvfs
 gvfs-google
