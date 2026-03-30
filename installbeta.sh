@@ -82,6 +82,7 @@ OPTIONS=(
     3 "Install Docker" OFF
     4 "Install Pacman Packages" ON
     5 "Install Yay and AUR Packages" ON
+    6 "Install affinity with GUI" OFF
 )
 
 CHOICE=$(whiptail --title "Installation Options" --checklist \
@@ -204,6 +205,27 @@ for selection in $CHOICE; do
                 echo "+ sleep 10" && sleep 10
             fi
             ;;
+        "6")
+  	    echo "Installing GUI dependencies"
+	    if command -v pacman </dev/null; then
+		echo "Pacman found"
+		sudo pacman -S python-pyqt6 --noconfirm --needed
+	    fi
+	    if command -v dnf </dev/null; then
+	    	echo "dnf found"
+		sudo dnf install python3-pyqt6
+	    fi
+	    if command -v apt </dev/null; then
+		echo "apt found"
+		sudo apt install python3-pyqt6 -y
+	    fi
+	    echo "Install affinity with ryzendew's gui installer"
+	    echo "You must manually select to install in the GUI"
+	    echo "Github repo: https://github.com/ryzendew/Linux-Affinity-Installer"
+	    echo "+ 10 sleep"
+	    sleep 10
+	    curl -sSL https://raw.githubusercontent.com/ryzendew/AffinityOnLinux/refs/heads/main/AffinityScripts/AffinityLinuxInstaller.py | python3
+	    ;;
         *)
             echo "Invalid option selected: $selection"
             ;; 
