@@ -28,7 +28,7 @@ ttf-victor-mono
 tty-clock
 tutanota-desktop-bin
 unimatrix-git
-vesktop-git
+vencord-hook
 voxtype
 wallust
 winboat-bin

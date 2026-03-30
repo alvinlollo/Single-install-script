@@ -48,6 +48,7 @@ fcitx5-gtk
 fcitx5-mozc
 fcitx5-qt
 ffmpegthumbnailer
+kdenlive
 figlet
 firefox
 flatpak
@@ -82,7 +83,6 @@ grub
 gst-plugins-base
 gst-plugins-ugly
 gst-python
-gstreamer-vaapi
 gufw
 gvfs
 gvfs-google
@@ -158,6 +158,7 @@ proton-vpn-gtk-app
 python-hatchling
 python-installer
 python-pip
+python-pyqt6
 python-pyquery
 python-uv
 python-wxpython
@@ -181,6 +182,7 @@ sddm
 sof-firmware
 sox
 steam
+sshfs
 swaync
 syncthing
 syslinux
