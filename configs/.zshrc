@@ -5,6 +5,11 @@ export PATH="$HOME/.local/bin:$PATH"
 export WAYLAND_DISPLAY=$WAYLAND_DISPLAY
 export XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
 
+# Homebrew (If installed)
+if [[ -f "/home/linusbrew/.linuxbrew/bin/brew" ]]; then
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv zsh)"
+fi
+
 # Path to your oh-my-zsh installation.
   export ZSH=~/.oh-my-zsh
 
