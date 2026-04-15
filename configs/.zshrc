@@ -171,6 +171,11 @@ bindkey '^U' sudo-last-command-execute
 if [[ -f "/tmp/.ydotool_socket" ]]; then
 	export YDOTOOL_SOCKET=/tmp/.ydotool_socket
 fi
+
+# Haven android ssh client
+precmd()  { print -Pn '\e]133;D;%?\a\e]133;A\a' }
+preexec() { print -Pn '\e]133;B\a\e]133;C\a' }
+
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.

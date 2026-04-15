@@ -15,6 +15,7 @@ lib32-blas
 lib32-lzo
 linux-header
 localsend
+mages-bin
 mingw-w64-tools
 neofetch
 python-ufonormalizer
