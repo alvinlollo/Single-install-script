@@ -10,6 +10,11 @@ if [[ -f "/home/linusbrew/.linuxbrew/bin/brew" ]]; then
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv zsh)"
 fi
 
+# Ghostty (If exists)
+if [ -n "${GHOSTTY_RESOURCES_DIR}" ]; then
+    builtin source "${GHOSTTY_RESOURCES_DIR}/shell-integration/bash/ghostty.bash"
+fi
+
 # Path to your oh-my-zsh installation.
   export ZSH=~/.oh-my-zsh
 
