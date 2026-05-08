@@ -16,7 +16,7 @@ echo '
     |____/ \__  |  \__ _|_| \_/ |_|_| |_|_|\___/|_|_|\___/ 
             |___/ 
 
-    --------------- Single Download script --------------- 
+    --------------- Single Download script (Beta) --------------- 
 BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, 
 THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. 
 See the LICENCE for more detail
@@ -82,6 +82,7 @@ OPTIONS=(
     3 "Install Docker" OFF
     4 "Install Pacman Packages" ON
     5 "Install Yay and AUR Packages" ON
+    6 "Install affinity with GUI" OFF
 )
 
 CHOICE=$(whiptail --title "Installation Options" --checklist \
@@ -110,7 +111,7 @@ for selection in $CHOICE; do
                 echo "Found local script, running..."
                 bash zsh.sh --skip-watermark
             else
-                bash -c "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh)" --skip-watermark
+                bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh)" --skip-watermark
             fi
             ;;
         "2")
@@ -138,74 +139,93 @@ for selection in $CHOICE; do
         "4")
             echo "Installing Pacman Packages..."
             # Check if pacman binary is installed
-            if ! command -v pacman >/dev/null; then
+            if command -v pacman </dev/null; then
                 echo "Cannot proceed: pacman binary not found"
                 exit 1 # exit with an error
-            else
-                # Install pacman packages
-                # Runs local script unless it does not exit or fails
-                if [[ -f "./configs/PackagesPacman.txt" ]]; then
-                    echo "Found local config"
-                    cat ./configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm
-                elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm; then
-                    echo "--------------------------------------------------------------------"
-                    echo "Failed to install Pacman packages. You can try running it manually:"
-                    echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm"
-                    echo "--------------------------------------------------------------------"
-                    echo "+ sleep 10" && sleep 10
-                fi
+            fi
+            # Install pacman packages
+            # Runs local script unless it does not exit or fails
+            if [[ -f "./configs/PackagesPacman.txt" ]]; then
+                echo "Found local config"
+                cat ./configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm
+            elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm; then
+                echo "--------------------------------------------------------------------"
+                echo "Failed to install Pacman packages. You can try running it manually:"
+                echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesPacman.txt | sudo pacman -S - --needed --noconfirm"
+                echo "--------------------------------------------------------------------"
+                echo "+ sleep 10" && sleep 10
             fi
             ;;
         "5")
             echo "Installing Yay and Yay Packages..."
             # Check for pacman before installing yay
-            if ! command -v pacman >/dev/null; then
+            if command -v pacman </dev/null; then
                 echo "Cannot proceed: Not a arch based system"
                 exit 1 # Exit with an error
-            else
-                # Install yay prerequisites
-                if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl go fakeroot debugedit make gcc; then
+            fi
+            # Install yay prerequisites
+            if ! sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl golang fakeroot debugedit make gcc; then
+                echo "--------------------------------------------------------------------"
+                echo "Failed to install prerequisite packages for Yay. You can try running it manually:"
+                echo "sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl golang fakeroot debugedit make gcc"
+                echo "--------------------------------------------------------------------"
+                exit 1 # exit with an error
+            fi
+            # Check if yay binary exists
+            if ! command -v yay >/dev/null; then
+                echo "yay is NOT installed. Running installation commands..."
+                if ! git clone https://aur.archlinux.org/yay.git /tmp/yay_install; then
                     echo "--------------------------------------------------------------------"
-                    echo "Failed to install prerequisite packages for Yay. You can try running it manually:"
-                    echo "sudo pacman -S --needed --noconfirm efibootmgr sbsigntools mokutil sbctl go fakeroot debugedit make gcc"
+                    echo "Failed to clone yay repository. You can try running it manually:"
+                    echo "git clone https://aur.archlinux.org/yay.git /tmp/yay_install"
+                    echo "--------------------------------------------------------------------"
+                    exit 1 # exit with an error
+                elif ! (cd /tmp/yay_install && makepkg -si --noconfirm); then
+                    echo "--------------------------------------------------------------------"
+                    echo "Failed to build and install yay. You can try running it manually:"
+                    echo "cd /tmp/yay_install && makepkg -si --noconfirm"
                     echo "--------------------------------------------------------------------"
                     exit 1 # exit with an error
                 fi
-                # Check if yay binary exists
-                if ! command -v yay >/dev/null; then
-                    echo "yay is NOT installed. Running installation commands..."
-                    if ! git clone https://aur.archlinux.org/yay.git /tmp/yay_install; then
-                        echo "--------------------------------------------------------------------"
-                        echo "Failed to clone yay repository. You can try running it manually:"
-                        echo "git clone https://aur.archlinux.org/yay.git /tmp/yay_install"
-                        echo "--------------------------------------------------------------------"
-                        exit 1 # exit with an error
-                    elif ! (cd /tmp/yay_install && makepkg -si --noconfirm); then
-                        echo "--------------------------------------------------------------------"
-                        echo "Failed to build and install yay. You can try running it manually:"
-                        echo "cd /tmp/yay_install && makepkg -si --noconfirm"
-                        echo "--------------------------------------------------------------------"
-                        exit 1 # exit with an error
-                    fi
-                    cd $PreviousWD
-                    rm -rf /tmp/yay_install
-                else
-                    echo "Yay is already installed."
-                fi
-                # Install yay packages
-                # Runs local script unless it does no exist or fails
-                if [[ -f "./config/PackagesYay.txt" ]]; then
-                    echo "Found local config"
-                    cat ./config/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm
-                elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm; then
-                    echo "--------------------------------------------------------------------"
-                    echo "Failed to install Yay packages. You can try running it manually:"
-                    echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm"
-                    echo "--------------------------------------------------------------------"
-                    echo "+ sleep 10" && sleep 10
-                fi
+                cd $PreviousWD
+                rm -rf /tmp/yay_install
+            else
+                echo "Yay is already installed."
+            fi
+            # Install yay packages
+            # Runs local script unless it does no exist or fails
+            if [[ -f "./config/PackagesYay.txt" ]]; then
+                echo "Found local config"
+                cat ./config/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm
+            elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm; then
+                echo "--------------------------------------------------------------------"
+                echo "Failed to install Yay packages. You can try running it manually:"
+                echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/PackagesYay.txt | yay -S --needed --save --answerclean None --answerdiff None - --noconfirm"
+                echo "--------------------------------------------------------------------"
+                echo "+ sleep 10" && sleep 10
             fi
             ;;
+        "6")
+  	    echo "Installing GUI dependencies"
+	    if command -v pacman </dev/null; then
+		echo "Pacman found"
+		sudo pacman -S python-pyqt6 --noconfirm --needed
+	    fi
+	    if command -v dnf </dev/null; then
+	    	echo "dnf found"
+		sudo dnf install python3-pyqt6
+	    fi
+	    if command -v apt </dev/null; then
+		echo "apt found"
+		sudo apt install python3-pyqt6 -y
+	    fi
+	    echo "Install affinity with ryzendew's gui installer"
+	    echo "You must manually select to install in the GUI"
+	    echo "Github repo: https://github.com/ryzendew/Linux-Affinity-Installer"
+	    echo "+ 10 sleep"
+	    sleep 10
+	    curl -sSL https://raw.githubusercontent.com/ryzendew/AffinityOnLinux/refs/heads/main/AffinityScripts/AffinityLinuxInstaller.py | python3
+	    ;;
         *)
             echo "Invalid option selected: $selection"
             ;; 
