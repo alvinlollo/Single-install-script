@@ -16,26 +16,28 @@ if [ ! -f "$MAIN_LUA" ]; then
     exit 1
 fi
 
-# Create a backup
-cp "$MAIN_LUA" "$MAIN_LUA.bak"
-echo "Backup saved: $MAIN_LUA.bak"
+# Create a backup (only if none exists)
+if [ ! -f "$MAIN_LUA.bak" ]; then
+    cp "$MAIN_LUA" "$MAIN_LUA.bak"
+    echo "Backup saved: $MAIN_LUA.bak"
+fi
 
 patched=0
 
-# Fix monitors section
-if grep -q '^if is_file_exists(HOME .. "/.config/hypr/monitors.lua") then' "$MAIN_LUA" && \
+# Fix monitors
+if grep -q 'require("monitors")' "$MAIN_LUA" && \
    ! grep -q 'package.loaded\["monitors"\]' "$MAIN_LUA"; then
-    sed -i '/^if is_file_exists(HOME .. "\/.config\/hypr\/monitors.lua") then$/a\    package.loaded["monitors"] = nil' "$MAIN_LUA"
+    sed -i 's/^\s*--\s*require("monitors")/package.loaded["monitors"] = nil\nrequire("monitors")/' "$MAIN_LUA"
     echo "Patched: monitors.lua require() cache cleared"
     patched=1
 else
     echo "Skipped monitors: already patched or not found"
 fi
 
-# Fix workspaces section
-if grep -q '^if is_file_exists(HOME .. "/.config/hypr/workspaces.lua") then' "$MAIN_LUA" && \
+# Fix workspaces
+if grep -q 'require("workspaces")' "$MAIN_LUA" && \
    ! grep -q 'package.loaded\["workspaces"\]' "$MAIN_LUA"; then
-    sed -i '/^if is_file_exists(HOME .. "\/.config\/hypr\/workspaces.lua") then$/a\    package.loaded["workspaces"] = nil' "$MAIN_LUA"
+    sed -i 's/^\s*--\s*require("workspaces")/package.loaded["workspaces"] = nil\nrequire("workspaces")/' "$MAIN_LUA"
     echo "Patched: workspaces.lua require() cache cleared"
     patched=1
 else
