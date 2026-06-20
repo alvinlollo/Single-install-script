@@ -16,7 +16,7 @@ echo '
     |____/ \__  |  \__ _|_| \_/ |_|_| |_|_|\___/|_|_|\___/ 
             |___/ 
 
-    --------------- Single Download script (Beta) --------------- 
+    --------------- Single Download script (Stable) --------------- 
 BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, 
 THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. 
 See the LICENCE for more detail
@@ -33,7 +33,7 @@ function error_handler() {
 trap error_handler ERR
 
 #Install prerequisites
-sudo pacman -Syu git zsh curl wget whiptail --noconfirm --needed
+sudo pacman -Syu git zsh curl wget libnewt --noconfirm --needed
 
 if command -v pacman >/dev/null; then
     echo "pacman detected. Installing prerequisites"

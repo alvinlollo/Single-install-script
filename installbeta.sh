@@ -32,19 +32,18 @@ function error_handler() {
 # Trap errors
 trap error_handler ERR
 
-#Install prerequisites
-sudo pacman -Syu git zsh curl wget whiptail --noconfirm --needed
+# Install prerequisites
 
 if command -v pacman >/dev/null; then
     echo "pacman detected. Installing prerequisites"
-    sudo pacman -Syu git zsh curl wget whiptail --noconfirm --needed
+    sudo pacman -Syu git zsh curl wget libnewt rsync --noconfirm --needed
 fi
 
 if command -v apt >/dev/null; then
     echo "apt detected. Installing prerequisites"
     sudo apt update
     sudo apt full-upgrade -y
-    sudo apt install git zsh curl wget whiptail -y
+    sudo apt install git zsh curl wget whiptail rsync -y
 fi
 
 # Ensure whiptail is installed
@@ -77,12 +76,13 @@ fi
 
 # Options for the whiptail menu
 OPTIONS=(
-    1 "Run zsh setup script" ON
-    2 "Run LazyVim setup script" OFF
-    3 "Install Docker" OFF
-    4 "Install Pacman Packages" ON
-    5 "Install Yay and AUR Packages" ON
-    6 "Install affinity with GUI" OFF
+    1 "Run zsh setup script" OFF
+    2 "Run fish setup script (NOT CREATED)" ON
+    3 "Run LazyVim setup script" OFF
+    4 "Install Docker" OFF
+    5 "Install Pacman Packages" ON
+    6 "Install Yay and AUR Packages" ON
+    7 "Install affinity with GUI" OFF
 )
 
 CHOICE=$(whiptail --title "Installation Options" --checklist \
@@ -114,7 +114,17 @@ for selection in $CHOICE; do
                 bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh)" --skip-watermark
             fi
             ;;
-        "2")
+	"2")
+	    echo "Running fish setup script..."
+	    # Runs local script unless it does not exist or fails
+	    if [[ -f "fish.sh" ]]; then
+		echo "Found local script, running..."
+		bash fish.sh --skip-watermark
+	    else
+		bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/fish.sh)" --skip-watermark
+	    fi
+	    ;;
+        "3")
             echo "Running LazyVim setup script..."
             # Runs local script unless it does not exist or fails
             if [[ -f "LazyVim.sh" ]];then
@@ -124,7 +134,7 @@ for selection in $CHOICE; do
                 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/LazyVim.sh | bash
             fi
             ;;
-        "3")
+        "4")
             echo "Installing Docker..."
             if ! command -v docker >/dev/null; then
                 echo "docker is NOT installed. Installing..."
@@ -136,7 +146,7 @@ for selection in $CHOICE; do
                 echo "+ sleep 10" && sleep 10
             fi
             ;;
-        "4")
+        "5")
             echo "Installing Pacman Packages..."
             # Check if pacman binary is installed
             if command -v pacman </dev/null; then
@@ -156,7 +166,7 @@ for selection in $CHOICE; do
                 echo "+ sleep 10" && sleep 10
             fi
             ;;
-        "5")
+        "6")
             echo "Installing Yay and Yay Packages..."
             # Check for pacman before installing yay
             if command -v pacman </dev/null; then
@@ -205,7 +215,7 @@ for selection in $CHOICE; do
                 echo "+ sleep 10" && sleep 10
             fi
             ;;
-        "6")
+        "7")
   	    echo "Installing GUI dependencies"
 	    if command -v pacman </dev/null; then
 		echo "Pacman found"
