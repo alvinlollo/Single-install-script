@@ -152,14 +152,6 @@ update () {
 	omz update
 }
 
-tree () {
-	if [ "$1" >/dev/null ]; then
-		eza --tree --git --no-time --no-permissions --level $1
-	else
-		eza --tree --git --no-time --no-permissions
-	fi
-}
-
 # Sudo last command with control + u
 
 zle -N sudo-last-command-execute
@@ -169,8 +161,8 @@ sudo-last-command-execute() {
 
 }
 
-# Bind the widget to Control+U
-bindkey '^U' sudo-last-command-execute
+# Bind the widget to Alt+S
+bindkey '^[S' sudo-last-command-execute
 
 # Ydotool
 if [[ -f "/tmp/.ydotool_socket" ]]; then
