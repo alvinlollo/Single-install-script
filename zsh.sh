@@ -27,7 +27,6 @@ echo "This script will backup your current zsh config if it exists "
 set -eu
 
 # Install prerequisites if installed skips
-
 if ! command -v zsh >/dev/null && command -v git >/dev/null && command -v curl >/dev/null && command -v fzf >/dev/null; then
   if command -v pacman >/dev/null; then
     echo "pacman detected. Installing prerequisites"

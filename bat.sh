@@ -47,8 +47,7 @@ if ! command -v bat >/dev/null; then
     fi
   fi
   # 1. Detect the actual active shell name (not just the login default)
-  CURRENT_SHELL=$(basename "$0" 2>/dev/null || echo "$0")
-  CURRENT_SHELL="${CURRENT_SHELL#-}" # Strip leading dash if it's a login shell
+  CURRENT_SHELL=$(basename -- "$SHELL")
 
   # 2. Source the correct configuration file safely
   if [ "$CURRENT_SHELL" = "bash" ] && [ -f ~/.bashrc ]; then
