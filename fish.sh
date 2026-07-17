@@ -2,11 +2,11 @@
 
 skip_watermark=false
 if [ "$1" = "--skip-watermark" ]; then
-    skip_watermark=true
+  skip_watermark=true
 fi
 
 if [ "$skip_watermark" = false ]; then
-echo '
+  echo '
      ____                _       _       _       _ _
     | __ ) _   _    __ _| |_   _(_)_ __ | | ___ | | | ___
     |  _ \| | | |  / _  | \ \ / / |  _ \| |/ _ \| | |/ _ \
@@ -40,35 +40,33 @@ if ! command -v zsh >/dev/null && command -v git >/dev/null && command -v curl >
   fi
 fi
 
-fish=$(which fish)
-
 # Clone or pull end-4 dotfiles repository
 if [ -d dots-hyprland ]; then
-    cd dots-hyprland && git pull && cd ..
+  cd dots-hyprland && git pull && cd ..
 else
-    git clone https://github.com/end-4/dots-hyprland.git
+  git clone https://github.com/end-4/dots-hyprland.git
 fi
 
 # Copy fish config files from end-4 to git repo if they don't exist
 if [ ! -f configs/fish/config.fish ]; then
-    cp dots-hyprland/dots/.config/fish/config.fish configs/fish/config.fish
+  cp dots-hyprland/dots/.config/fish/config.fish configs/fish/config.fish
 fi
 
 if [ ! -f configs/fish/auto-Hypr.fish ]; then
-    cp dots-hyprland/dots/.config/fish/auto-Hypr.fish configs/fish/auto-Hypr.fish
+  cp dots-hyprland/dots/.config/fish/auto-Hypr.fish configs/fish/auto-Hypr.fish
 fi
 
 if [ ! -f configs/fish/fish_variables ]; then
-    cp dots-hyprland/dots/.config/fish/fish_variables configs/fish/fish_variables
+  cp dots-hyprland/dots/.config/fish/fish_variables configs/fish/fish_variables
 fi
 
 # Copy color configs from end-4 to git repo if they don't exist
 if [ ! -f configs/hypr/hyprland/colors.conf ]; then
-    cp dots-hyprland/dots/.config/hypr/hyprland/colors.conf configs/hypr/hyprland/colors.conf
+  cp dots-hyprland/dots/.config/hypr/hyprland/colors.conf configs/hypr/hyprland/colors.conf
 fi
 
 if [ ! -f configs/hypr/hyprlock/colors.conf ]; then
-    cp dots-hyprland/dots/.config/hypr/hyprlock/colors.conf configs/hypr/hyprlock/colors.conf
+  cp dots-hyprland/dots/.config/hypr/hyprlock/colors.conf configs/hypr/hyprlock/colors.conf
 fi
 
 # Run end-4 setup script with flags to skip unnecessary components
@@ -79,27 +77,32 @@ mkdir -p "$HOME/.config/fish"
 
 # Copy fish config files to user config if they don't exist
 if [ ! -f "$HOME/.config/fish/config.fish" ]; then
-    cp configs/fish/config.fish "$HOME/.config/fish/config.fish"
+  cp configs/fish/config.fish "$HOME/.config/fish/config.fish"
 fi
 
 if [ -d configs/fish/functions ] && [ ! -d "$HOME/.config/fish/functions" ]; then
-    cp -r configs/fish/functions "$HOME/.config/fish/"
+  cp -r configs/fish/functions "$HOME/.config/fish/"
 fi
 
 if [ -d configs/fish/conf.d ] && [ ! -d "$HOME/.config/fish/conf.d" ]; then
-    cp -r configs/fish/conf.d "$HOME/.config/fish/"
+  cp -r configs/fish/conf.d "$HOME/.config/fish/"
 fi
 
 if [ ! -f "$HOME/.config/fish/auto-Hypr.fish" ]; then
-    cp configs/fish/auto-Hypr.fish "$HOME/.config/fish/"
+  cp configs/fish/auto-Hypr.fish "$HOME/.config/fish/"
 fi
 
 # Copy color configs to user config if they don't exist
 if [ ! -f "$HOME/.config/hypr/hyprland/colors.conf" ]; then
-    cp configs/hypr/hyprland/colors.conf "$HOME/.config/hypr/hyprland/colors.conf"
+  cp configs/hypr/hyprland/colors.conf "$HOME/.config/hypr/hyprland/colors.conf"
 fi
 
 if [ ! -f "$HOME/.config/hypr/hyprlock/colors.conf" ]; then
-    cp configs/hypr/hyprlock/colors.conf "$HOME/.config/hypr/hyprlock/colors.conf"
+  cp configs/hypr/hyprlock/colors.conf "$HOME/.config/hypr/hyprlock/colors.conf"
 fi
 
+# Install Fisher plugin manager for fish shell
+curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher
+
+# Install plugins using Fisher
+fisher install jorgebucaran/nvm.fish
