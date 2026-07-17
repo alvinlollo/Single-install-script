@@ -8,7 +8,7 @@ if ! command -v pacman >/dev/null; then
 fi
 
 # Install prerequisetes
-sudo pacman -S --needed --noconfirm git curl wget python3 python-pip neovim jdk-openjdk base-devel ripgrep fd lazygit curl tectonic tree-sittter sclip julia luarocks shfmt ast-grep
+sudo pacman -S --needed --noconfirm git curl wget python3 python-pip neovim jdk-openjdk base-devel ripgrep fd lazygit curl tectonic tree-sittter sclip julia luarocks shfmt ast-grep nvm
 
 echo ""
 echo 'This script will move your current nvim config to ~/.config/nvim.bak'
@@ -72,3 +72,40 @@ fi
 # Install LazyVim
 echo ""
 git clone https://github.com/alvinlollo/LazyVim ~/.config/nvim
+
+# Check if nvm is in shell path
+if command -v nvm &>/dev/null; then
+  # Get current shell name
+  CURRENT_SHELL=$(basename -- "$SHELL")
+
+  # 2. Source the correct configuration file safely
+  if [ "$CURRENT_SHELL" = "fish" ] && [ -f ~/.bashrc ]; then
+
+    # Check if fish is installed first, then check for fisher
+    if command -v fish &>/dev/null && fish -c "functions -q fisher" &>/dev/null; then
+      fisher install jorgebucaran/nvm.fish
+    else
+      curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+      fisher install jorgebucaran/fisher
+      source ~/.fishrc
+    fi
+
+  elif [ "$CURRENT_SHELL" = "zsh" ] && [ -f ~/.zshrc ]; then
+
+    echo -e "export NVM_DIR=\"$HOME/.nvm\"\n[ -s \"/usr/share/nvm/nvm.sh\" ] && \. \"/usr/share/nvm/nvm.sh\"\n[ -s \"/usr/share/nvm/init-nvm.sh\" ] && \. \"/usr/share/nvm/init-nvm.sh\"" >>~/.zshrc
+    source ~/.zshrc
+
+  elif [ "$CURRENT_SHELL" = "bash" ] && [ -f ~/.config/fish/config.fish ]; then
+
+    echo "source /usr/share/nvm/init-nvm.sh" >>~/.bashrc
+    source ~/.bashrc
+
+  else
+    echo "Unsupported or unreadable shell configuration: $CURRENT_SHELL"
+    echo "Failed to add NVM to shell path. Please add it manually to your shell configuration file."
+  fi
+fi
+
+# Use NVM to install the latest LTS version of Node.js
+nvm install lts
+nvm use lts
