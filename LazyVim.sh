@@ -84,10 +84,12 @@ if command -v nvm &>/dev/null; then
     # Check if fish is installed first, then check for fisher
     if command -v fish &>/dev/null && fish -c "functions -q fisher" &>/dev/null; then
       fisher install jorgebucaran/nvm.fish
+      source ~/.config/fish/config.fish
     else
       curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
       fisher install jorgebucaran/fisher
-      source ~/.fishrc
+      fisher install jorgebucaran/nvm.fish
+      source ~/.config/fish/config.fish
     fi
 
   elif [ "$CURRENT_SHELL" = "zsh" ] && [ -f ~/.zshrc ]; then
