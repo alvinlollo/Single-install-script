@@ -8,3 +8,8 @@ hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_THEME", "Catppuccin Macchiato Dark")
 hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("WEBKIT_DISABLE_DMABUF_RENDERER", "1")
+
+ecosystem = {
+	no_donation_nag = true,
+	no_update_news = false,
+}

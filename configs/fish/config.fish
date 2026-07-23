@@ -31,18 +31,3 @@ if status is-interactive
         alias ssh 'kitten ssh'
     end
 end
-
-set -gx PATH $HOME/.local/bin $HOME/bin /usr/local/bin /usr/bin $PATH
-export WAYLAND_DISPLAY=$WAYLAND_DISPLAY
-export XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
-
-# Homebrew (If installed)
-if test -f "/home/linusbrew/.linuxbrew/bin/brew"
-	eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv zsh)"
-end
-
-# Ydotool
-if test -f "/tmp/.ydotool_socket"
-	set -gx YDOTOOL_SOCKET /tmp/.ydotool_socket
-end
-
