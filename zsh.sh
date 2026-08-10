@@ -1,5 +1,13 @@
 #!/usr/bin/bash
 
+# Detect fish shell and ask user to switch to bash (bash-only syntax)
+if [ -n "${FISH_VERSION:-}" ] || case "$SHELL" in *fish*) ;; *) false ;; esac; then
+  echo "Warning: fish shell detected."
+  echo "This script is written for bash and may have syntax issues under fish."
+  echo "Please switch to bash first and re-run it, e.g.: bash $0"
+  read -r -p "Press Enter to continue anyway, or Ctrl+C to cancel..." </dev/tty || true
+fi
+
 skip_watermark=false
 if [ "$1" = "--skip-watermark" ]; then
     skip_watermark=true
@@ -116,14 +124,14 @@ echo "Changing your shell to $zsh..."
 
 if ! echo "+ sudo -k chsh -s "$zsh" "$USER"" && sudo -k chsh -s "$zsh" "$USER"; then # -k forces password prompt
   echo "Next command may fail."
-  echo "+ chsh -s $"(which zsh)" "$USER""
-  chsh -s $"(which zsh)" "$USER"  # run chsh normally may fail
+  echo "+ chsh -s \"$(which zsh)\" \"$USER\""
+  chsh -s "$(which zsh)" "$USER"  # run chsh normally may fail
 fi
 
 # Check if the shell change was successful
 if [ $? -ne 0 ]; then
   echo "chsh command unsuccessful. Change your default shell manually:"
-  echo "chsh -s $"(which zsh)" "$USER""
+  echo "chsh -s \"$(which zsh)\" \"$USER\""
 else
   export SHELL="$zsh"
   echo "Shell successfully changed to '$zsh'."

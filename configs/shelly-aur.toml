@@ -1,0 +1,42 @@
+standard = [
+]
+
+aur = [
+  "agru",
+  "android-studio",
+  "asciinema-agg",
+  "bluez-qt5",
+  "browseros-bin",
+  "catppuccin-cursors-macchiato",
+  "cuda-12.9",
+  "davs2",
+  "dirb",
+  "discord-bot-client-appimage",
+  "eternalterminal",
+  "game-devices-udev",
+  "gnu-netcat",
+  "google-chrome",
+  "grub-customizer",
+  "gtk-engine-murrine",
+  "joycond-cemuhook-git",
+  "joycond-git",
+  "lib32-gtk2",
+  "pacserve",
+  "rpi-imager-git",
+  "skipfish",
+  "snapd",
+  "ssh-import-id",
+  "superproductivity-bin",
+  "syncthingtray-qt6",
+  "trayscale",
+  "ttf-victor-mono",
+  "varia",
+  "vencord-hook",
+  "vencord-installer-bin",
+  "wallust",
+  "woeusb-ng",
+  "xwaylandvideobridge",
+]
+
+flatpak = [
+]

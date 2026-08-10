@@ -1,9 +1,9 @@
 # Single-install-script
 
 This script automatically installs my favourite Linux applications I use every day such as:
-[Docker](https://www.docker.com/), [zsh, oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh) and [neovim](https://neovim.io/). This uses pacman and [yay AUR helper](https://github.com/Jguer/yay). You can choose what sections to install with the whiptail menu.
+[Docker](https://www.docker.com/), [zsh, oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh) and [neovim](https://neovim.io/). This uses the [shelly-cli](https://github.com/Seafoam-Labs/Shelly-ALPM) package manager. You can choose what sections to install with the whiptail menu.
 
-This script will use aim to use the [shelly-cli](https://github.com/Seafoam-Labs/Shelly-ALPM) installer.
+This script will automatically install [shelly-cli](https://github.com/Seafoam-Labs/Shelly-ALPM) if it is not already present.
 
 Most of this script is intended for Arch Linux with some Debian compatibility on the zsh install script only.
 
