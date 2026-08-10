@@ -7,7 +7,7 @@ if [ "$1" = "--skip-watermark" ]; then
 fi
 
 # Detect fish shell and ask user to switch to bash (bash-only syntax)
-if [ -n "${FISH_VERSION:-}" ] || case "$SHELL" in *fish*) ;; *) false ;; esac; then
+if [ -n "${FISH_VERSION:-}" ] || case "$SHELL" in *fish*) ;; *) false ;; esac then
   echo "Warning: fish shell detected."
   echo "This script is written for bash and may have syntax issues under fish."
   echo "Please switch to bash first and re-run it, e.g.: bash $0"
@@ -75,7 +75,7 @@ fi
 
 # Install prerequisites
 if command -v shelly >/dev/null; then
-  echo "shelly detected. Installing prerequisites"
+  echo "Shelly detected. Installing prerequisites"
   shelly install standard git zsh curl wget libnewt rsync whiptail --upgrade --no-confirm
 fi
 
@@ -117,6 +117,7 @@ OPTIONS=(
   5 "Install Standard Packages (Shelly)" ON
   6 "Install AUR Packages (Shelly)" ON
   7 "Install affinity with GUI" OFF
+  8 "Run bat setup script" ON
 )
 
 CHOICE=$(whiptail --title "Installation Options" --checklist \
@@ -230,6 +231,16 @@ for selection in $CHOICE; do
       echo "shelly backup --import --name shelly-aur --directory /tmp --no-confirm"
       echo "--------------------------------------------------------------------"
       echo "+ sleep 10" && sleep 10
+    fi
+    ;;
+  "8")
+    echo "Running bat setup script..."
+    # Runs local script unless it does not exist or fails
+    if [[ -f "bat.sh" ]]; then
+      echo "Found local script, running..."
+      bash bat.sh --skip-watermark
+    else
+      bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/bat.sh)" --skip-watermark
     fi
     ;;
   "7")
