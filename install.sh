@@ -233,16 +233,6 @@ for selection in $CHOICE; do
       echo "+ sleep 10" && sleep 10
     fi
     ;;
-  "8")
-    echo "Running bat setup script..."
-    # Runs local script unless it does not exist or fails
-    if [[ -f "bat.sh" ]]; then
-      echo "Found local script, running..."
-      bash bat.sh --skip-watermark
-    else
-      bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/bat.sh)" --skip-watermark
-    fi
-    ;;
   "7")
     echo "Installing GUI dependencies"
     if command -v shelly >/dev/null; then
@@ -264,6 +254,17 @@ for selection in $CHOICE; do
     sleep 10
     curl -sSL https://raw.githubusercontent.com/ryzendew/AffinityOnLinux/refs/heads/main/AffinityScripts/AffinityLinuxInstaller.py | python3
     ;;
+  "8")
+    echo "Running bat setup script..."
+    # Runs local script unless it does not exist or fails
+    if [[ -f "bat.sh" ]]; then
+      echo "Found local script, running..."
+      bash bat.sh --skip-watermark
+    else
+      bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/bat.sh)" --skip-watermark
+    fi
+    ;;
+
   *)
     echo "Invalid option selected: $selection"
     ;;
