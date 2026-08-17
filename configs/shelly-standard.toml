@@ -13,6 +13,8 @@ standard = [
   "ast-grep",
   "atomicparsley",
   "atool",
+  "arduino-language-server",
+  "arduino-cli",
   "base",
   "base-devel",
   "bat",
@@ -270,6 +272,7 @@ standard = [
   "tor",
   "torbrowser-launcher",
   "tree",
+  "ttf-dejavu"
   "ttf-droid",
   "ttf-fantasque-nerd",
   "ttf-fira-code",
