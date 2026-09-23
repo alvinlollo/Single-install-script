@@ -6,12 +6,20 @@ if [ "$1" = "--skip-watermark" ]; then
   skip_watermark=true
 fi
 
-# Detect fish shell and ask user to switch to bash (bash-only syntax)
-if [ -n "${FISH_VERSION:-}" ] || case "$SHELL" in *fish*) ;; *) false ;; esac then
-  echo "Warning: fish shell detected."
-  echo "This script is written for bash and may have syntax issues under fish."
-  echo "Please switch to bash first and re-run it, e.g.: bash $0"
-  read -r -p "Press Enter to continue anyway, or Ctrl+C to cancel..." </dev/tty || true
+# Detect fish shell and warn user to run with bash instead (bash-only syntax)
+if [ -n "${FISH_VERSION:-}" ] || case "$SHELL" in *fish*) ;; *) false ;; esac; then
+  if command -v whiptail >/dev/null; then
+    if ! whiptail --title "Warning: use bash, not fish" --yesno \
+      "Your default shell appears to be fish.\n\nThis script must be run with bash. It uses bash-only syntax and will fail under fish.\n\nRun it with:\n  bash install.sh\n\nContinue anyway?" 15 72; then
+      echo "Aborted. Please run this script with bash, not fish. e.g.: bash install.sh"
+      exit 1
+    fi
+  else
+    echo "Warning: fish shell detected."
+    echo "This script must be run with bash, not fish (bash-only syntax)."
+    echo "Please run it with bash, e.g.: bash install.sh"
+    read -r -p "Press Enter to continue anyway, or Ctrl+C to cancel..." </dev/tty || true
+  fi
 fi
 
 if [ "$skip_watermark" = false ]; then
@@ -133,7 +141,7 @@ else
 fi
 
 # Fail on any command.
-set -eu pipefail
+set -euo pipefail
 
 # Process selected options
 for selection in $CHOICE; do
@@ -146,7 +154,7 @@ for selection in $CHOICE; do
       echo "Found local script, running..."
       bash zsh.sh --skip-watermark
     else
-      bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh)" --skip-watermark
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | bash -s -- --skip-watermark
     fi
     ;;
   "2")
@@ -156,7 +164,7 @@ for selection in $CHOICE; do
       echo "Found local script, running..."
       bash fish.sh --skip-watermark
     else
-      bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/fish.sh)" --skip-watermark
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/fish.sh | bash -s -- --skip-watermark
     fi
     ;;
   "3")
@@ -261,7 +269,7 @@ for selection in $CHOICE; do
       echo "Found local script, running..."
       bash bat.sh --skip-watermark
     else
-      bash "$(curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/bat.sh)" --skip-watermark
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/bat.sh | bash -s -- --skip-watermark
     fi
     ;;
 

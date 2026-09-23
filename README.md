@@ -15,6 +15,8 @@ Please consider staring this project. It helps me see how important this is for 
 
 ## Usage
 
+> **Warning:** Run this script with **bash**, not fish (or another shell). It uses bash-only syntax and will fail if run under fish. Keep `bash` in the commands below — do not replace it with `fish` or `source` the script. If fish is your default shell, a warning (dialog if whiptail is installed, otherwise a text prompt) will remind you before anything is installed.
+
 To use this script paste the following in the Terminal:
 
 ```bash
