@@ -28,32 +28,49 @@ if [ "$skip_watermark" = false ]; then
 '
 fi
 
-# Install prerequisites
-if ! command -v git >/dev/null && command -v curl >/dev/null; then
+# Install prerequisites if installed skips
+if ! command -v git >/dev/null || ! command -v curl >/dev/null || ! command -v wget >/dev/null; then
   if command -v pacman >/dev/null; then
     echo "pacman detected. Installing prerequisites"
-    sudo pacman -S zsh git curl --noconfirm
-  fi
-
-  if command -v apt >/dev/null; then
+    sudo pacman -S --needed --noconfirm git curl wget
+  elif command -v apt >/dev/null; then
     echo "apt detected. Installing prerequisites"
-    sudo apt install git curl -y
+    sudo apt install git curl wget -y
+  else
+    echo "No supported package manager found (pacman/apt)."
+    echo "Please install git, curl and wget manually, then re-run this script."
+    exit 1
   fi
 fi
 
 # Install bat
-if ! command -v bat >/dev/null; then
-  if ! command -v zsh >/dev/null && command -v git >/dev/null && command -v curl >/dev/null && command -v fzf >/dev/null; then
-    if command -v pacman >/dev/null; then
-      echo "pacman detected. Installing bat"
-      sudo pacman -S bat batman --noconfirm
-    fi
-
-    if command -v apt >/dev/null; then
-      echo "apt detected. Installing bat"
-      sudo apt install bat batman -y
-    fi
+fresh_bat_install=false
+if ! command -v bat >/dev/null && ! command -v batcat >/dev/null; then
+  if command -v pacman >/dev/null; then
+    echo "pacman detected. Installing bat"
+    sudo pacman -S --needed --noconfirm bat bat-extras
+  elif command -v apt >/dev/null; then
+    echo "apt detected. Installing bat"
+    sudo apt install bat -y
+  else
+    echo "No supported package manager found (pacman/apt)."
+    echo "Please install bat manually, then re-run this script."
+    exit 1
   fi
+  fresh_bat_install=true
+fi
+
+# Debian/Ubuntu ship the binary as batcat, provide bat for the commands below
+if ! command -v bat >/dev/null && command -v batcat >/dev/null; then
+  sudo ln -sf "$(command -v batcat)" /usr/local/bin/bat
+fi
+
+if ! command -v bat >/dev/null; then
+  echo "bat is not available. Install it manually, then re-run this script."
+  exit 1
+fi
+
+if [ "$fresh_bat_install" = true ]; then
   # 1. Detect the actual active shell name (not just the login default)
   CURRENT_SHELL=$(basename -- "$SHELL")
 
