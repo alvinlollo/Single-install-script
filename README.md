@@ -5,7 +5,7 @@ This script automatically installs my favourite Linux applications I use every d
 
 This script will automatically install [shelly-cli](https://github.com/Seafoam-Labs/Shelly-ALPM) if it is not already present.
 
-Most of this script is intended for Arch Linux with some Debian compatibility on the zsh install script only.
+Most of this script is intended for Arch Linux with some Debian compatibility on the zsh, bat and LazyVim install scripts.
 
 It also installs custom configuration for zsh and it's plugins.
 

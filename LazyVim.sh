@@ -8,15 +8,35 @@ if [ -n "${FISH_VERSION:-}" ] || case "$SHELL" in *fish*) ;; *) false ;; esac; t
   read -r -p "Press Enter to continue anyway, or Ctrl+C to cancel..." </dev/tty || true
 fi
 
-if ! command -v pacman >/dev/null; then
-  echo "Cannot proceed: Not a arch based system"
-  echo "This script does not have debian support"
+# Install prerequisetes
+if command -v pacman >/dev/null; then
+  echo "pacman detected. Installing prerequisites"
+  # sclip is not packaged for arch, tree-sitter-cli ships the tree-sitter binary
+  sudo pacman -S --needed --noconfirm git curl wget python3 python-pip neovim jdk-openjdk base-devel ripgrep fd lazygit tectonic tree-sitter-cli julia luarocks shfmt ast-grep nvm
+elif command -v apt >/dev/null; then
+  echo "apt detected. Installing prerequisites"
+  # tectonic and sclip have no debian package, ast-grep comes from npm, node comes from nodejs
+  sudo apt install git curl wget python3 python3-pip python3-pynvim neovim default-jdk build-essential ripgrep fd-find lazygit tree-sitter-cli luarocks shfmt nodejs npm -y
+
+  # julia has no package for every debian architecture (e.g. arm64)
+  sudo apt install julia -y || echo "julia could not be installed, skipping"
+
+  # Debian ships the fd binary as fdfind
+  if ! command -v fd >/dev/null && command -v fdfind >/dev/null; then
+    sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
+  fi
+
+  if ! command -v sg >/dev/null; then
+    sudo npm install -g @ast-grep/cli
+  fi
+
+  echo "Skipped on debian (not packaged): tectonic, sclip"
+else
+  echo "Cannot proceed: pacman or apt is required"
+  echo "This script supports arch based and debian based systems"
   echo "+ sleep 10" && sleep 10
   exit 1
 fi
-
-# Install prerequisetes
-sudo pacman -S --needed --noconfirm git curl wget python3 python-pip neovim jdk-openjdk base-devel ripgrep fd lazygit curl tectonic tree-sittter sclip julia luarocks shfmt ast-grep nvm
 
 echo ""
 echo 'This script will move your current nvim config to ~/.config/nvim.bak'
@@ -117,5 +137,11 @@ if command -v nvm &>/dev/null; then
 fi
 
 # Use NVM to install the latest LTS version of Node.js
-nvm install lts
-nvm use lts
+if command -v nvm &>/dev/null; then
+  nvm install lts
+  nvm use lts
+elif command -v node >/dev/null; then
+  echo "nvm not found, using system Node.js $(node --version)"
+else
+  echo "No Node.js installation found. Install it manually, then re-run this script."
+fi
