@@ -12,22 +12,36 @@ fi
 if command -v pacman >/dev/null; then
   echo "pacman detected. Installing prerequisites"
   # sclip is not packaged for arch, tree-sitter-cli ships the tree-sitter binary
-  sudo pacman -S --needed --noconfirm git curl wget python3 python-pip neovim jdk-openjdk base-devel ripgrep fd lazygit tectonic tree-sitter-cli julia luarocks shfmt ast-grep nvm
+  if ! sudo pacman -S --needed --noconfirm git curl wget python3 python-pip neovim jdk-openjdk base-devel ripgrep fd lazygit tectonic tree-sitter-cli julia luarocks shfmt ast-grep nvm nodejs; then
+    echo "--------------------------------------------------------------------"
+    echo "Failed to install prerequisites. You can try running it manually:"
+    echo "sudo pacman -S --needed --noconfirm git curl wget python3 python-pip neovim jdk-openjdk base-devel ripgrep fd lazygit tectonic tree-sitter-cli julia luarocks shfmt ast-grep nvm nodejs"
+    echo "--------------------------------------------------------------------"
+    exit 1
+  fi
 elif command -v apt >/dev/null; then
   echo "apt detected. Installing prerequisites"
   # tectonic and sclip have no debian package, ast-grep comes from npm, node comes from nodejs
-  sudo apt install git curl wget python3 python3-pip python3-pynvim neovim default-jdk build-essential ripgrep fd-find lazygit tree-sitter-cli luarocks shfmt nodejs npm -y
+  if ! sudo apt update || ! sudo apt install git curl wget python3 python3-pip python3-pynvim neovim default-jdk build-essential ripgrep fd-find luarocks shfmt nodejs npm -y; then
+    echo "--------------------------------------------------------------------"
+    echo "Failed to install prerequisites. You can try running it manually:"
+    echo "sudo apt install git curl wget python3 python3-pip python3-pynvim neovim default-jdk build-essential ripgrep fd-find luarocks shfmt nodejs npm -y"
+    echo "--------------------------------------------------------------------"
+    exit 1
+  fi
 
-  # julia has no package for every debian architecture (e.g. arm64)
-  sudo apt install julia -y || echo "julia could not be installed, skipping"
+  # lazygit and tree-sitter-cli only exist on the newest releases, julia is missing on some architectures (e.g. arm64)
+  for optional_pkg in lazygit tree-sitter-cli julia; do
+    sudo apt install "$optional_pkg" -y || echo "$optional_pkg could not be installed, skipping"
+  done
 
   # Debian ships the fd binary as fdfind
   if ! command -v fd >/dev/null && command -v fdfind >/dev/null; then
     sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
   fi
 
-  if ! command -v sg >/dev/null; then
-    sudo npm install -g @ast-grep/cli
+  if ! command -v ast-grep >/dev/null; then
+    sudo npm install -g @ast-grep/cli || echo "ast-grep could not be installed, skipping"
   fi
 
   echo "Skipped on debian (not packaged): tectonic, sclip"
@@ -143,5 +157,7 @@ if command -v nvm &>/dev/null; then
 elif command -v node >/dev/null; then
   echo "nvm not found, using system Node.js $(node --version)"
 else
-  echo "No Node.js installation found. Install it manually, then re-run this script."
+  echo "No Node.js installation found."
+  echo "Source your nvm install (e.g. . /usr/share/nvm/nvm.sh) or install nodejs, then re-run this script."
+  exit 1
 fi
