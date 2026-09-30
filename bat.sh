@@ -32,10 +32,16 @@ fi
 if ! command -v git >/dev/null || ! command -v curl >/dev/null || ! command -v wget >/dev/null; then
   if command -v pacman >/dev/null; then
     echo "pacman detected. Installing prerequisites"
-    sudo pacman -S --needed --noconfirm git curl wget
+    if ! sudo pacman -S --needed --noconfirm git curl wget; then
+      echo "Failed to install prerequisites. Install git, curl and wget manually, then re-run this script."
+      exit 1
+    fi
   elif command -v apt >/dev/null; then
     echo "apt detected. Installing prerequisites"
-    sudo apt install git curl wget -y
+    if ! sudo apt update || ! sudo apt install git curl wget -y; then
+      echo "Failed to install prerequisites. Install git, curl and wget manually, then re-run this script."
+      exit 1
+    fi
   else
     echo "No supported package manager found (pacman/apt)."
     echo "Please install git, curl and wget manually, then re-run this script."
