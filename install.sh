@@ -8,9 +8,8 @@ fi
 
 # Detect fish shell and warn user to run with bash instead (bash-only syntax)
 if [ -n "${FISH_VERSION:-}" ] || case "$SHELL" in *fish*) ;; *) false ;; esac; then
-  if command -v whiptail >/dev/null; then
-    if ! whiptail --title "Warning: use bash, not fish" --yesno \
-      "Your default shell appears to be fish.\n\nThis script must be run with bash. It uses bash-only syntax and will fail under fish.\n\nRun it with:\n  bash install.sh\n\nContinue anyway?" 15 72; then
+  if command -v gum >/dev/null; then
+    if ! gum confirm "$(printf 'Your default shell appears to be fish.\n\nThis script must be run with bash. It uses bash-only syntax and will fail under fish.\n\nRun it with:\n  bash install.sh\n\nContinue anyway?')"; then
       echo "Aborted. Please run this script with bash, not fish. e.g.: bash install.sh"
       exit 1
     fi
@@ -84,70 +83,70 @@ fi
 # Install prerequisites
 if command -v shelly >/dev/null; then
   echo "Shelly detected. Installing prerequisites"
-  shelly install standard git zsh curl wget libnewt rsync whiptail --upgrade --no-confirm
+  shelly install standard git zsh curl wget libnewt rsync gum --upgrade --no-confirm
 fi
 
 if command -v apt >/dev/null; then
   echo "apt detected. Installing prerequisites"
   sudo apt update
   sudo apt full-upgrade -y
-  sudo apt install git zsh curl wget whiptail rsync -y
+  sudo apt install git zsh curl wget rsync gum -y
 fi
 
-# Ensure whiptail is installed
-if ! command -v whiptail >/dev/null; then
-  echo "whiptail is not installed. Installing it now..."
+# Ensure gum is installed
+if ! command -v gum >/dev/null; then
+  echo "gum is not installed. Installing it now..."
 
   if command -v shelly >/dev/null; then
-    echo "shelly detected. Installing whiptail"
-    shelly install standard whiptail --no-confirm || {
-      echo "Failed to install whiptail. Exiting."
+    echo "shelly detected. Installing gum"
+    shelly install standard gum --no-confirm || {
+      echo "Failed to install gum. Exiting."
       exit 1
     }
   fi
 
   if command -v apt >/dev/null; then
-    echo "apt detected. Installing whiptail"
-    sudo apt install whiptail -y || {
-      echo "Failed to install whiptail. Exiting."
+    echo "apt detected. Installing gum"
+    sudo apt install gum -y || {
+      echo "Failed to install gum. Exiting."
       exit 1
     }
   fi
 
 fi
 
-# Options for the whiptail menu
+# Options for the gum menu
 OPTIONS=(
-  1 "Run zsh setup script" OFF
-  2 "Run fish setup script" ON
-  3 "Run LazyVim setup script" OFF
-  4 "Install Docker" OFF
-  5 "Install Standard Packages (Shelly)" ON
-  6 "Install AUR Packages (Shelly)" ON
-  7 "Install affinity with GUI" OFF
-  8 "Run bat setup script" ON
+  "Run zsh setup script"
+  "Run fish setup script"
+  "Run LazyVim setup script"
+  "Install Docker"
+  "Install Standard Packages (Shelly)"
+  "Install AUR Packages (Shelly)"
+  "Install affinity with GUI"
+  "Run bat setup script"
 )
 
-CHOICE=$(whiptail --title "Installation Options" --checklist \
-  "Choose components to install:" 20 78 10 \
-  "${OPTIONS[@]}" 3>&1 1>&2 2>&3)
-
-exitstatus=$?
-if [ $exitstatus = 0 ]; then
-  echo "User selected: $CHOICE"
-else
+CHOICE=$(gum choose --no-limit --height 14 \
+  --header "Tab = select, Enter = confirm:" \
+  --selected "Run fish setup script,Install Standard Packages (Shelly),Install AUR Packages (Shelly),Run bat setup script" \
+  "${OPTIONS[@]}") || {
   echo "User cancelled installation."
   exit 1
-fi
+}
+
+echo "User selected:"
+echo "$CHOICE"
 
 # Fail on any command.
 set -euo pipefail
 
-# Process selected options
-for selection in $CHOICE; do
-  clean_selection=$(echo "$selection" | tr -d '"')
-  case $clean_selection in
-  "1")
+# Process selected options in menu order
+while IFS= read -r selection; do
+  # Skip options the user did not select
+  grep -qxF "$selection" <<<"$CHOICE" || continue
+  case "$selection" in
+  "Run zsh setup script")
     echo "Running zsh setup script..."
     # Runs local script unless it does not exist or fails
     if [[ -f "zsh.sh" ]]; then
@@ -157,7 +156,7 @@ for selection in $CHOICE; do
       curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | bash -s -- --skip-watermark
     fi
     ;;
-  "2")
+  "Run fish setup script")
     echo "Running fish setup script..."
     # Runs local script unless it does not exist or fails
     if [[ -f "fish.sh" ]]; then
@@ -167,7 +166,7 @@ for selection in $CHOICE; do
       curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/fish.sh | bash -s -- --skip-watermark
     fi
     ;;
-  "3")
+  "Run LazyVim setup script")
     echo "Running LazyVim setup script..."
     # Runs local script unless it does not exist or fails
     if [[ -f "LazyVim.sh" ]]; then
@@ -177,7 +176,7 @@ for selection in $CHOICE; do
       curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/LazyVim.sh | bash
     fi
     ;;
-  "4")
+  "Install Docker")
     echo "Installing Docker..."
     if ! command -v docker >/dev/null; then
       echo "docker is NOT installed. Installing..."
@@ -189,7 +188,7 @@ for selection in $CHOICE; do
       echo "+ sleep 10" && sleep 10
     fi
     ;;
-  "5")
+  "Install Standard Packages (Shelly)")
     echo "Installing Standard Packages via Shelly backup..."
     # Check if shelly binary is installed
     if ! command -v shelly >/dev/null; then
@@ -215,7 +214,7 @@ for selection in $CHOICE; do
       echo "+ sleep 10" && sleep 10
     fi
     ;;
-  "6")
+  "Install AUR Packages (Shelly)")
     echo "Installing AUR Packages via Shelly backup..."
     # Check for shelly before installing AUR packages
     if ! command -v shelly >/dev/null; then
@@ -241,7 +240,7 @@ for selection in $CHOICE; do
       echo "+ sleep 10" && sleep 10
     fi
     ;;
-  "7")
+  "Install affinity with GUI")
     echo "Installing GUI dependencies"
     if command -v shelly >/dev/null; then
       echo "shelly found"
@@ -262,7 +261,7 @@ for selection in $CHOICE; do
     sleep 10
     curl -sSL https://raw.githubusercontent.com/ryzendew/AffinityOnLinux/refs/heads/main/AffinityScripts/AffinityLinuxInstaller.py | python3
     ;;
-  "8")
+  "Run bat setup script")
     echo "Running bat setup script..."
     # Runs local script unless it does not exist or fails
     if [[ -f "bat.sh" ]]; then
@@ -277,6 +276,6 @@ for selection in $CHOICE; do
     echo "Invalid option selected: $selection"
     ;;
   esac
-done
+done < <(printf '%s\n' "${OPTIONS[@]}")
 
 echo "Installation process complete."

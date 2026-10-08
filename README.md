@@ -1,7 +1,7 @@
 # Single-install-script
 
 This script automatically installs my favourite Linux applications I use every day such as:
-[Docker](https://www.docker.com/), [zsh, oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh) and [neovim](https://neovim.io/). This uses the [shelly-cli](https://github.com/Seafoam-Labs/Shelly-ALPM) package manager. You can choose what sections to install with the whiptail menu.
+[Docker](https://www.docker.com/), [zsh, oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh) and [neovim](https://neovim.io/). This uses the [shelly-cli](https://github.com/Seafoam-Labs/Shelly-ALPM) package manager. You can choose what sections to install with the [gum](https://github.com/charmbracelet/gum) menu.
 
 This script will automatically install [shelly-cli](https://github.com/Seafoam-Labs/Shelly-ALPM) if it is not already present.
 
@@ -15,7 +15,7 @@ Please consider staring this project. It helps me see how important this is for 
 
 ## Usage
 
-> **Warning:** Run this script with **bash**, not fish (or another shell). It uses bash-only syntax and will fail if run under fish. Keep `bash` in the commands below — do not replace it with `fish` or `source` the script. If fish is your default shell, a warning (dialog if whiptail is installed, otherwise a text prompt) will remind you before anything is installed.
+> **Warning:** Run this script with **bash**, not fish (or another shell). It uses bash-only syntax and will fail if run under fish. Keep `bash` in the commands below — do not replace it with `fish` or `source` the script. If fish is your default shell, a warning (a `gum confirm` dialog if gum is installed, otherwise a text prompt) will remind you before anything is installed.
 
 To use this script paste the following in the Terminal:
 
