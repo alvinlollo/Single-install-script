@@ -129,7 +129,12 @@ fish)
       fish -c "source '$fisher_src' && fisher install jorgebucaran/fisher"
       rm -f "$fisher_src"
     fi
-    fish -c 'fisher install jorgebucaran/nvm.fish'
+    # fisher refuses to install over existing files - skip when already present
+    if fish -c 'type -q nvm' 2>/dev/null; then
+      echo "nvm.fish already available in fish, skipping install."
+    else
+      fish -c 'fisher install jorgebucaran/nvm.fish'
+    fi
   else
     echo "No ~/.config/fish/config.fish found, skipping fish plugin setup"
   fi

@@ -95,13 +95,21 @@ for script in "${SCRIPTS[@]}"; do
     ;;
   zsh.sh)
     run_test "$script" '
+      # pre-seed a config so BOTH runs have something to back up
+      printf "# preexisting zshrc marker\n" > /root/.zshrc
       bash zsh.sh --skip-watermark
       [ -f /root/.zshrc ] || { echo ".zshrc missing"; exit 1; }
       [ -d /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions ] || { echo "plugins missing"; exit 1; }
-      # second run must rotate the backup, not overwrite it
+      n=$(find /root -maxdepth 1 -name ".zshrc.bak-*" | wc -l)
+      [ "$n" -eq 1 ] || { echo "expected 1 backup after first run, got $n"; exit 1; }
+      grep -q "preexisting zshrc marker" /root/.zshrc.bak-* \
+        || { echo "first backup does not hold the original config"; exit 1; }
+      # second run must rotate (new timestamped backup), not overwrite
       bash zsh.sh --skip-watermark
-      [ "$(find /root -maxdepth 1 -name ".zshrc.bak-*" | wc -l)" -ge 2 ] \
-        || { echo "backup rotation failed"; exit 1; }
+      n=$(find /root -maxdepth 1 -name ".zshrc.bak-*" | wc -l)
+      [ "$n" -eq 2 ] || { echo "expected 2 backups after second run (rotation), got $n"; exit 1; }
+      grep -q "preexisting zshrc marker" /root/.zshrc.bak-* \
+        || { echo "second run destroyed an earlier backup"; exit 1; }
     '
     ;;
   fish.sh)

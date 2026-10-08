@@ -89,7 +89,7 @@ if [ -n "$SCRIPT_DIR" ] && [ -d "$SCRIPT_DIR/configs" ]; then
     fish/config.fish \
     fish/auto-Hypr.fish \
     fish/fish_variables \
-    hypr/hyprland/colors.conf \
+    hypr/hyprland/colors.lua \
     hypr/hyprlock/colors.conf; do
     if [ ! -f "$SCRIPT_DIR/configs/$rel" ] && [ -f "$WORK_DIR/dots-hyprland/dots/.config/$rel" ]; then
       mkdir -p "$(dirname "$SCRIPT_DIR/configs/$rel")"
@@ -152,19 +152,34 @@ if cfg_src fish/conf.d >/dev/null 2>&1 && [ ! -d "$HOME/.config/fish/conf.d" ]; 
   cp -r "$(cfg_src fish/conf.d)" "$HOME/.config/fish/"
 fi
 
-# Copy color configs to user config if they don't exist
-install_file hypr/hyprland/colors.conf "$HOME/.config/hypr/hyprland/colors.conf"
+# Copy color configs to user config if they don't exist.
+# end-4 renamed hyprland's colors.conf to colors.lua and keeps hyprlock's
+# colors under hypr/hyprlock/ - warn and skip if upstream moves again.
+install_file hypr/hyprland/colors.lua "$HOME/.config/hypr/hyprland/colors.lua"
 install_file hypr/hyprlock/colors.conf "$HOME/.config/hypr/hyprlock/colors.conf"
 
-# Install Fisher plugin manager + plugins, running inside fish (this is bash)
-if ! curl -fsSL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish \
-  -o "$WORK_DIR/fisher.fish"; then
-  echo "error: failed to download the fisher.fish installer" >&2
-  exit 1
+# Install the Fisher plugin manager and nvm.fish, running inside fish (this is
+# bash). The repo configs may already ship these functions (copied above) -
+# fisher refuses to install over existing files, so only bootstrap what is
+# actually missing instead of forcing a re-install.
+if fish -c 'type -q fisher' 2>/dev/null; then
+  echo "Fisher is already available in fish (from configs/), skipping bootstrap."
+else
+  if ! curl -fsSL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish \
+    -o "$WORK_DIR/fisher.fish"; then
+    echo "error: failed to download the fisher.fish installer" >&2
+    exit 1
+  fi
+  if ! fish -c "source '$WORK_DIR/fisher.fish' && fisher install jorgebucaran/fisher"; then
+    echo "error: failed to install Fisher into fish" >&2
+    exit 1
+  fi
 fi
 
-if ! fish -c "source '$WORK_DIR/fisher.fish' && fisher install jorgebucaran/fisher jorgebucaran/nvm.fish"; then
-  echo "error: failed to install Fisher and nvm.fish into fish" >&2
+if fish -c 'type -q nvm' 2>/dev/null; then
+  echo "nvm.fish is already available in fish, skipping install."
+elif ! fish -c 'fisher install jorgebucaran/nvm.fish'; then
+  echo "error: failed to install nvm.fish into fish" >&2
   exit 1
 fi
 
