@@ -2,29 +2,12 @@
 
 # Strict mode from the very start: every tolerated failure in this script is
 # an explicit guard (if ! / || record_failure), so preamble steps are checked
-# too. -E (errtrace) makes the ERR trap fire inside helper functions as well.
-set -Eeuo pipefail
+# too. Anything unguarded aborts the run via errexit.
+set -euo pipefail
 
 skip_watermark=false
 if [ "${1:-}" = "--skip-watermark" ]; then
   skip_watermark=true
-fi
-
-# Detect fish shell and warn user to run with bash instead (bash-only syntax)
-if [ -n "${FISH_VERSION:-}" ] || case "${SHELL:-}" in *fish*) ;; *) false ;; esac; then
-  if command -v gum >/dev/null; then
-    if ! gum confirm "$(printf 'Your default shell appears to be fish.\n\nThis script must be run with bash. It uses bash-only syntax and will fail under fish.\n\nRun it with:\n  bash installbeta.sh\n\nContinue anyway?')"; then
-      echo "Aborted. Please run this script with bash, not fish. e.g.: bash installbeta.sh"
-      exit 1
-    fi
-  else
-    echo "Warning: fish shell detected."
-    echo "This script must be run with bash, not fish (bash-only syntax)."
-    echo "Please run it with bash, e.g.: bash installbeta.sh"
-    if [ -t 0 ] && [ -e /dev/tty ]; then
-      read -r -p "Press Enter to continue anyway, or Ctrl+C to cancel..." </dev/tty || true
-    fi
-  fi
 fi
 
 if [ "$skip_watermark" = false ]; then
@@ -43,20 +26,6 @@ THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 See the LICENSE for more detail
 '
 fi
-
-# Report errors with context (line + failing command), and only once strict
-# mode is active so preamble failures abort instead of printing and continuing
-function error_handler() {
-  local rc="$1" line="$2" cmd="$3"
-  set +x
-  echo ""
-  echo "An error occurred (exit status $rc) at line $line while running:"
-  echo "  $cmd"
-  echo "Please check the output above for details."
-}
-
-# Trap errors (after set -euo pipefail above)
-trap 'error_handler "$?" "$LINENO" "$BASH_COMMAND"' ERR
 
 # --- Failure handling & full console log ------------------------------------
 # Everything from here on is teed to a log file in /tmp, and Arch-only step
@@ -93,7 +62,17 @@ record_failure() {
 # Private temp workspace for downloads and clones. Predictable names in /tmp
 # are a symlink attack vector on multi-user systems; the trap cleans up too.
 WORK_DIR="$(mktemp -d)"
-trap 'rm -rf "$WORK_DIR"' EXIT
+
+# Also stops the sudo keep-alive loop below when the script exits (any path:
+# normal end, menu cancel, errexit, signal). SUDO_LOOP_PID is unset if the
+# script bails out before the loop starts, hence the default value.
+cleanup() {
+  if [ -n "${SUDO_LOOP_PID:-}" ]; then
+    kill "$SUDO_LOOP_PID" 2>/dev/null || true
+  fi
+  rm -rf "$WORK_DIR"
+}
+trap cleanup EXIT
 
 # Resolve where this script lives so local script/config fallbacks do not
 # depend on the caller's current directory. Empty when piped (curl | bash).
@@ -103,41 +82,26 @@ else
   SCRIPT_DIR=""
 fi
 
-# Install shelly as a dependency if not present (Arch-based)
-if command -v pacman >/dev/null; then
-  # Install build prerequisites for shelly
-  if ! sudo pacman -S --needed --noconfirm base-devel git; then
-    echo "--------------------------------------------------------------------"
-    echo "Failed to install prerequisite packages for Shelly. You can try running it manually:"
-    echo "sudo pacman -S --needed --noconfirm base-devel git"
-    echo "--------------------------------------------------------------------"
-    record_failure "Shelly bootstrap (Arch-only)" "failed to install base-devel/git prerequisites"
-  fi
-  # Check if shelly binary exists
-  if ! command -v shelly >/dev/null; then
-    echo "shelly is NOT installed. Running installation commands..."
-    if ! git clone https://aur.archlinux.org/shelly.git "$WORK_DIR/shelly"; then
-      echo "--------------------------------------------------------------------"
-      echo "Failed to clone shelly repository. You can try running it manually:"
-      echo "git clone https://aur.archlinux.org/shelly.git \"$WORK_DIR/shelly\""
-      echo "--------------------------------------------------------------------"
-      record_failure "Shelly bootstrap (Arch-only)" "failed to clone the shelly AUR repository"
-    elif ! (cd "$WORK_DIR/shelly" && makepkg -si --noconfirm); then
-      echo "--------------------------------------------------------------------"
-      echo "Failed to build and install shelly. You can try running it manually:"
-      echo "cd \"$WORK_DIR/shelly\" && makepkg -si --noconfirm"
-      echo "--------------------------------------------------------------------"
-      record_failure "Shelly bootstrap (Arch-only)" "failed to build shelly with makepkg"
-    fi
-  else
-    echo "Shelly is already installed."
-  fi
-fi
+sudo -v # Ask for sudo upfront so the user is prompted only once
+
+# Sudo keep-alive loop
+sudo_keep_alive() {
+  while true; do
+    sleep 250
+    sudo -n true 2>/dev/null || true
+    # $$ is the main script's PID even in this background subshell: exit as
+    # soon as the installer is gone, as a backstop for the EXIT trap.
+    kill -0 "$$" 2>/dev/null || exit
+  done
+}
+sudo_keep_alive &
+SUDO_LOOP_PID=$!
+echo "Keeping sudo alive on PID $SUDO_LOOP_PID - refreshing every 250s"
 
 # Install prerequisites
 if command -v shelly >/dev/null; then
   echo "Shelly detected. Installing prerequisites"
-  shelly install standard git zsh curl wget libnewt rsync gum --upgrade --no-confirm ||
+  shelly install standard base-devel git zsh curl wget libnewt rsync gum --upgrade --no-confirm ||
     record_failure "Prerequisites (shelly)" "installing base packages via shelly failed"
 fi
 
@@ -145,6 +109,7 @@ if command -v apt >/dev/null; then
   echo "apt detected. Installing prerequisites"
   sudo apt update || record_failure "Prerequisites (apt)" "apt update failed"
   sudo apt full-upgrade -y || record_failure "Prerequisites (apt)" "apt full-upgrade failed"
+  sudo -v
   sudo apt install git zsh curl wget rsync gum -y ||
     record_failure "Prerequisites (apt)" "apt install of base packages failed"
 fi
@@ -168,7 +133,55 @@ if ! command -v gum >/dev/null; then
       exit 1
     }
   fi
+fi
 
+# Install shelly as a dependency if not present (Arch-based)
+if command -v pacman >/dev/null; then
+  # Install build prerequisites for shelly
+  if ! gum spin --show-error -s dot --title "Install base-devel and git" -- sudo pacman -S --needed --noconfirm base-devel git; then
+    echo "--------------------------------------------------------------------"
+    echo "Failed to install prerequisite packages for Shelly. You can try running it manually:"
+    echo "sudo pacman -S --needed --noconfirm base-devel git"
+    echo "--------------------------------------------------------------------"
+    record_failure "Shelly bootstrap (Arch-only)" "failed to install base-devel/git prerequisites"
+  fi
+  # Check if shelly binary exists
+  if ! command -v shelly >/dev/null; then
+    echo "shelly is NOT installed. Running installation commands..."
+    if ! gum spin --show-error -s dot --title "Clone Shelly from AUR" -- git clone https://aur.archlinux.org/shelly.git "$WORK_DIR/shelly"; then
+      echo "--------------------------------------------------------------------"
+      echo "Failed to clone shelly repository. You can try running it manually:"
+      echo "git clone https://aur.archlinux.org/shelly.git \"$WORK_DIR/shelly\""
+      echo "--------------------------------------------------------------------"
+      record_failure "Shelly bootstrap (Arch-only)" "failed to clone the shelly AUR repository"
+    elif ! (cd "$WORK_DIR/shelly" && gum spin --show-error -s dot --title "Install Shelly" makepkg -si --noconfirm); then
+      echo "--------------------------------------------------------------------"
+      echo "Failed to build and install shelly. You can try running it manually:"
+      echo "cd \"$WORK_DIR/shelly\" && makepkg -si --noconfirm"
+      echo "--------------------------------------------------------------------"
+      record_failure "Shelly bootstrap (Arch-only)" "failed to build shelly with makepkg"
+    fi
+  else
+    echo "Shelly is already installed."
+  fi
+fi
+
+# gum drives every interactive dialog in this script and there is no fallback
+# menu, so a system that ended up without it must abort here.
+if ! command -v gum >/dev/null; then
+  echo "gum is required but could not be installed on this system (no shelly/apt found)." >&2
+  echo "Install it manually: https://github.com/charmbracelet/gum" >&2
+  exit 1
+fi
+
+# Detect fish shell and warn user to run with bash instead (bash-only syntax).
+# Placed after the gum bootstrap above so the dialog can always use gum confirm
+# instead of falling back to a plain text prompt.
+if [ -n "${FISH_VERSION:-}" ] || case "${SHELL:-}" in *fish*) ;; *) false ;; esac then
+  if ! gum_tty confirm "$(printf 'Your default shell appears to be fish.\n\nThis script must be run with bash. It uses bash-only syntax and will fail under fish.\n\nRun it with:\n  bash installbeta.sh\n\nContinue anyway?')"; then
+    echo "Aborted. Please run this script with bash, not fish. e.g.: bash installbeta.sh"
+    exit 1
+  fi
 fi
 
 # Options for the gum menu
@@ -183,58 +196,19 @@ OPTIONS=(
   "Run bat setup script"
 )
 
-# Present the menu: gum when available, plain numbered fallback otherwise
-# (systems with neither shelly nor apt never get gum installed - the menu
-# must still work there instead of failing with a misleading message)
-select_options() {
-  if command -v gum >/dev/null; then
-    gum_tty choose --no-limit --height 14 \
-      --header "Tab = select, Enter = confirm:" \
-      --selected "Run fish setup script,Install Standard Packages (Shelly),Install AUR Packages (Shelly),Run bat setup script" \
-      "${OPTIONS[@]}"
-    return
-  fi
+# Present the menu with gum (gum is guaranteed by the bootstrap above)
+if ! CHOICE=$(gum_tty choose --no-limit --height 14 \
+  --header "Tab = select, Enter = confirm:" \
+  --selected "Run fish setup script,Install Standard Packages (Shelly),Install AUR Packages (Shelly),Run bat setup script" \
+  "${OPTIONS[@]}"); then
+  echo "No options selected (menu cancelled). Nothing was installed."
+  exit 1
+fi
 
-  echo "gum is not installed and could not be installed on this system." >&2
-  echo "Falling back to a plain numbered menu." >&2
-  local i=1 opt
-  for opt in "${OPTIONS[@]}"; do
-    printf '  %d) %s\n' "$i" "$opt"
-    i=$((i + 1))
-  done
-
-  local reply=""
-  if [ -e /dev/tty ]; then
-    read -r -p "Enter numbers separated by spaces (Enter = cancel): " reply </dev/tty || reply=""
-  else
-    echo "No interactive terminal available, cannot show a menu." >&2
-    return 2
-  fi
-
-  [ -n "$reply" ] || return 1
-
-  local -a picked=()
-  local n
-  for n in $reply; do
-    case "$n" in
-    '' | *[!0-9]*)
-      echo "Invalid selection: $n" >&2
-      return 1
-      ;;
-    esac
-    if [ "$n" -ge 1 ] && [ "$n" -le "${#OPTIONS[@]}" ]; then
-      picked+=("${OPTIONS[$((n - 1))]}")
-    else
-      echo "Selection out of range: $n" >&2
-      return 1
-    fi
-  done
-  [ "${#picked[@]}" -gt 0 ] || return 1
-  printf '%s\n' "${picked[@]}"
-}
-
-if ! CHOICE="$(select_options)"; then
-  echo "No options selected (menu cancelled or unavailable). Nothing was installed."
+# gum exits 0 with empty output when nothing is selected - treat that as a
+# cancel too, otherwise the run below would silently install nothing.
+if [ -z "$CHOICE" ]; then
+  echo "No options selected. Nothing was installed."
   exit 1
 fi
 
@@ -248,15 +222,16 @@ while IFS= read -r selection; do
   case "$selection" in
   "Run zsh setup script")
     echo "Running zsh setup script..."
+    sudo -v
     # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
     if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/zsh.sh" ]; then
       echo "Found local script, running..."
-      bash "$SCRIPT_DIR/zsh.sh" --skip-watermark || {
+      gum spin --show-error -s dot --title "Installing zsh with local script" -- bash "$SCRIPT_DIR/zsh.sh" --skip-watermark || {
         rc=$?
         record_failure "Run zsh setup script" "zsh.sh exited with status $rc"
       }
     else
-      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | bash -s -- --skip-watermark || {
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | gum spin --show-error -s dot --title "Installing zsh" -- bash -s -- --skip-watermark || {
         rc=$?
         record_failure "Run zsh setup script" "downloaded zsh.sh exited with status $rc"
       }
@@ -264,15 +239,17 @@ while IFS= read -r selection; do
     ;;
   "Run fish setup script")
     echo "Running fish setup script..."
+    sudo -v
     # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
     if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/fish.sh" ]; then
       echo "Found local script, running..."
-      bash "$SCRIPT_DIR/fish.sh" --skip-watermark || {
+      gum spin --show-error -s dot --title "Installing fish with local script" -- bash "$SCRIPT_DIR/fish.sh" --skip-watermark || {
         rc=$?
         record_failure "Run fish setup script" "fish.sh exited with status $rc"
       }
     else
-      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/fish.sh | bash -s -- --skip-watermark || {
+      gum spin --show-error -s dot --title "Installing fish shell" \
+        bash -c "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/fish.sh | bash -s -- --skip-watermark" || {
         rc=$?
         record_failure "Run fish setup script" "downloaded fish.sh exited with status $rc"
       }
@@ -280,6 +257,7 @@ while IFS= read -r selection; do
     ;;
   "Run LazyVim setup script")
     echo "Running LazyVim setup script..."
+    sudo -v
     # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
     if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/LazyVim.sh" ]; then
       echo "Found local script, running..."
@@ -296,6 +274,7 @@ while IFS= read -r selection; do
     ;;
   "Install Docker")
     echo "Installing Docker..."
+    sudo -v
     if ! command -v docker >/dev/null; then
       echo "docker is NOT installed. Installing..."
       if curl -fsSL https://get.docker.com -o "$WORK_DIR/get-docker.sh" &&
@@ -320,8 +299,9 @@ while IFS= read -r selection; do
     if ! command -v shelly >/dev/null; then
       echo "Cannot proceed: shelly binary not found (Arch-only)"
       record_failure "Install Standard Packages (Shelly)" "shelly binary not found (Arch-only)"
-    # Install standard packages from shelly backup
-    # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
+      # Install standard packages from shelly backup
+      # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
+      sudo -v
     elif [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/configs/shelly-standard.toml" ]; then
       echo "Found local backup"
       shelly backup --import --name shelly-standard --directory "$SCRIPT_DIR/configs" --no-confirm || {
@@ -344,6 +324,7 @@ while IFS= read -r selection; do
     ;;
   "Install AUR Packages (Shelly)")
     echo "Installing AUR Packages via Shelly backup..."
+    sudo -v
     # Check for shelly before installing AUR packages
     if ! command -v shelly >/dev/null; then
       echo "Cannot proceed: shelly binary not found (Arch-only)"
@@ -372,6 +353,7 @@ while IFS= read -r selection; do
     ;;
   "Install affinity with GUI")
     echo "Installing GUI dependencies"
+    sudo -v
     if command -v shelly >/dev/null; then
       echo "shelly found"
       shelly install standard python-pyqt6 --no-confirm ||
@@ -437,12 +419,18 @@ if [ "${#FAILED[@]}" -gt 0 ]; then
   } | tee -a "$REPORT"
 
   if [ "$TTY_OK" = true ] && command -v gum >/dev/null; then
-    gum_tty pager < "$REPORT" || true
+    gum_tty pager <"$REPORT" || true
   fi
 
   # Non-zero so callers and CI can detect the failed run
   exit 1
 fi
 
-echo "All steps completed with no failures."
+echo "================ INSTALL SUMMARY ================"
+echo "installbeta.sh finished at $(date '+%F %T') - ${#FAILED[@]} step(s) failed:"
+echo ""
+echo "Full console log: /tmp/installbeta-$STAMP-XXXXXX.log"
+echo "Failure report:   $REPORT"
+echo "==================================================="
+
 exit 0
