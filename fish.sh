@@ -1,15 +1,19 @@
 #!/usr/bin/bash
 
+set -euo pipefail
+
 # Detect fish shell and ask user to switch to bash (bash-only syntax)
-if [ -n "${FISH_VERSION:-}" ] || case "$SHELL" in *fish*) ;; *) false ;; esac; then
+if [ -n "${FISH_VERSION:-}" ] || case "${SHELL:-}" in *fish*) ;; *) false ;; esac; then
   echo "Warning: fish shell detected."
   echo "This script is written for bash and may have syntax issues under fish."
   echo "Please switch to bash first and re-run it, e.g.: bash $0"
-  read -r -p "Press Enter to continue anyway, or Ctrl+C to cancel..." </dev/tty || true
+  if [ -t 0 ] && [ -e /dev/tty ]; then
+    read -r -p "Press Enter to continue anyway, or Ctrl+C to cancel..." </dev/tty || true
+  fi
 fi
 
 skip_watermark=false
-if [ "$1" = "--skip-watermark" ]; then
+if [ "${1:-}" = "--skip-watermark" ]; then
   skip_watermark=true
 fi
 
@@ -23,94 +27,139 @@ if [ "$skip_watermark" = false ]; then
             |___/
 
     --------------- FISH Install Script ---------------
-  BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, THERE IS NO WARRANTY
-  FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. See the LICENCE for more detail
+  BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENSE, THERE IS NO WARRANTY
+  FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. See the LICENSE for more detail
 '
 fi
 
 # Show disclaimer
 echo "This script will add fish functions and install fish"
 
-# Enable exit on error
-set -eu
+# Resolve where this script (and its configs/) live. When the script arrives
+# over a pipe (curl | bash) there is no local checkout, so repo-config syncing
+# is skipped and only the user's home directory is populated.
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+  SCRIPT_DIR=""
+fi
 
-# Install prerequisites if installed skips
+# Never clone or write into the caller's current directory
+WORK_DIR="$(mktemp -d)"
+trap 'rm -rf "$WORK_DIR"' EXIT
 
-if ! command -v zsh >/dev/null && command -v git >/dev/null && command -v curl >/dev/null && command -v fzf >/dev/null; then
+# Install prerequisites if any of them are missing
+if ! command -v fish >/dev/null || ! command -v git >/dev/null ||
+  ! command -v curl >/dev/null || ! command -v fzf >/dev/null; then
   if command -v pacman >/dev/null; then
     echo "pacman detected. Installing prerequisites"
-    sudo pacman -S fish git curl fzf --noconfirm
-  fi
-
-  if command -v apt >/dev/null; then
+    if ! sudo pacman -S --needed --noconfirm fish git curl fzf; then
+      echo "Failed to install prerequisites (fish, git, curl, fzf). Install them manually, then re-run this script."
+      exit 1
+    fi
+  elif command -v apt >/dev/null; then
     echo "apt detected. Installing prerequisites"
-    sudo apt install git curl fish fzf -y
+    if ! sudo apt update || ! sudo apt install git curl fish fzf -y; then
+      echo "Failed to install prerequisites (fish, git, curl, fzf). Install them manually, then re-run this script."
+      exit 1
+    fi
+  else
+    echo "No supported package manager found (pacman/apt)."
+    echo "Please install fish, git, curl and fzf manually, then re-run this script."
+    exit 1
   fi
 fi
 
-# Clone or pull end-4 dotfiles repository
-if [ -d dots-hyprland ]; then
-  cd dots-hyprland && git pull && cd ..
-else
-  git clone https://github.com/end-4/dots-hyprland.git
+if ! command -v fish >/dev/null; then
+  echo "error: fish could not be installed (no supported package manager, or install failed)." >&2
+  echo "Install fish manually, then re-run this script." >&2
+  exit 1
 fi
 
-# Copy fish config files from end-4 to git repo if they don't exist
-if [ ! -f configs/fish/config.fish ]; then
-  cp dots-hyprland/dots/.config/fish/config.fish configs/fish/config.fish
+# Clone the end-4 dotfiles repository into the temp workspace
+if ! git clone --depth=1 https://github.com/end-4/dots-hyprland.git "$WORK_DIR/dots-hyprland"; then
+  echo "error: failed to clone https://github.com/end-4/dots-hyprland.git" >&2
+  exit 1
 fi
 
-if [ ! -f configs/fish/auto-Hypr.fish ]; then
-  cp dots-hyprland/dots/.config/fish/auto-Hypr.fish configs/fish/auto-Hypr.fish
-fi
-
-if [ ! -f configs/fish/fish_variables ]; then
-  cp dots-hyprland/dots/.config/fish/fish_variables configs/fish/fish_variables
-fi
-
-# Copy color configs from end-4 to git repo if they don't exist
-if [ ! -f configs/hypr/hyprland/colors.conf ]; then
-  cp dots-hyprland/dots/.config/hypr/hyprland/colors.conf configs/hypr/hyprland/colors.conf
-fi
-
-if [ ! -f configs/hypr/hyprlock/colors.conf ]; then
-  cp dots-hyprland/dots/.config/hypr/hyprlock/colors.conf configs/hypr/hyprlock/colors.conf
+# Sync fresh end-4 files into this repo's configs/ (only when running from a
+# local checkout, and only for files that do not exist yet)
+if [ -n "$SCRIPT_DIR" ] && [ -d "$SCRIPT_DIR/configs" ]; then
+  for rel in \
+    fish/config.fish \
+    fish/auto-Hypr.fish \
+    fish/fish_variables \
+    hypr/hyprland/colors.conf \
+    hypr/hyprlock/colors.conf; do
+    if [ ! -f "$SCRIPT_DIR/configs/$rel" ] && [ -f "$WORK_DIR/dots-hyprland/dots/.config/$rel" ]; then
+      mkdir -p "$(dirname "$SCRIPT_DIR/configs/$rel")"
+      cp "$WORK_DIR/dots-hyprland/dots/.config/$rel" "$SCRIPT_DIR/configs/$rel"
+    fi
+  done
 fi
 
 # Run end-4 setup script with flags to skip unnecessary components
-dots-hyprland/setup install --force --skip-plasmaintg --skip-backup --skip-quickshell --skip-hyprland --skip-hyprland-entry
+echo "WARNING: the end-4 installer runs with --force and --skip-backup;"
+echo "it may overwrite an existing Hyprland configuration without a backup."
+(
+  cd "$WORK_DIR/dots-hyprland"
+  ./setup install --force --skip-plasmaintg --skip-backup --skip-quickshell --skip-hyprland --skip-hyprland-entry
+)
 
-# Create fish config directory
-mkdir -p "$HOME/.config/fish"
+# Resolve a config file: prefer this repo's copy, fall back to the end-4 clone
+cfg_src() {
+  local rel="$1"
+  if [ -n "$SCRIPT_DIR" ] && [ -e "$SCRIPT_DIR/configs/$rel" ]; then
+    printf '%s\n' "$SCRIPT_DIR/configs/$rel"
+  elif [ -e "$WORK_DIR/dots-hyprland/dots/.config/$rel" ]; then
+    printf '%s\n' "$WORK_DIR/dots-hyprland/dots/.config/$rel"
+  else
+    return 1
+  fi
+}
+
+# Copy a config file into $HOME if it does not exist yet
+install_file() {
+  local rel="$1" dest="$2" src
+  if [ -e "$dest" ]; then
+    return 0
+  fi
+  if ! src="$(cfg_src "$rel")"; then
+    echo "warning: $rel not found in configs/ or the end-4 clone, skipping" >&2
+    return 0
+  fi
+  mkdir -p "$(dirname "$dest")"
+  cp "$src" "$dest"
+}
 
 # Copy fish config files to user config if they don't exist
-if [ ! -f "$HOME/.config/fish/config.fish" ]; then
-  cp configs/fish/config.fish "$HOME/.config/fish/config.fish"
+install_file fish/config.fish "$HOME/.config/fish/config.fish"
+install_file fish/auto-Hypr.fish "$HOME/.config/fish/auto-Hypr.fish"
+
+if cfg_src fish/functions >/dev/null 2>&1 && [ ! -d "$HOME/.config/fish/functions" ]; then
+  mkdir -p "$HOME/.config/fish"
+  cp -r "$(cfg_src fish/functions)" "$HOME/.config/fish/"
 fi
 
-if [ -d configs/fish/functions ] && [ ! -d "$HOME/.config/fish/functions" ]; then
-  cp -r configs/fish/functions "$HOME/.config/fish/"
-fi
-
-if [ -d configs/fish/conf.d ] && [ ! -d "$HOME/.config/fish/conf.d" ]; then
-  cp -r configs/fish/conf.d "$HOME/.config/fish/"
-fi
-
-if [ ! -f "$HOME/.config/fish/auto-Hypr.fish" ]; then
-  cp configs/fish/auto-Hypr.fish "$HOME/.config/fish/"
+if cfg_src fish/conf.d >/dev/null 2>&1 && [ ! -d "$HOME/.config/fish/conf.d" ]; then
+  mkdir -p "$HOME/.config/fish"
+  cp -r "$(cfg_src fish/conf.d)" "$HOME/.config/fish/"
 fi
 
 # Copy color configs to user config if they don't exist
-if [ ! -f "$HOME/.config/hypr/hyprland/colors.conf" ]; then
-  cp configs/hypr/hyprland/colors.conf "$HOME/.config/hypr/hyprland/colors.conf"
+install_file hypr/hyprland/colors.conf "$HOME/.config/hypr/hyprland/colors.conf"
+install_file hypr/hyprlock/colors.conf "$HOME/.config/hypr/hyprlock/colors.conf"
+
+# Install Fisher plugin manager + plugins, running inside fish (this is bash)
+if ! curl -fsSL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish \
+  -o "$WORK_DIR/fisher.fish"; then
+  echo "error: failed to download the fisher.fish installer" >&2
+  exit 1
 fi
 
-if [ ! -f "$HOME/.config/hypr/hyprlock/colors.conf" ]; then
-  cp configs/hypr/hyprlock/colors.conf "$HOME/.config/hypr/hyprlock/colors.conf"
+if ! fish -c "source '$WORK_DIR/fisher.fish' && fisher install jorgebucaran/fisher jorgebucaran/nvm.fish"; then
+  echo "error: failed to install Fisher and nvm.fish into fish" >&2
+  exit 1
 fi
 
-# Install Fisher plugin manager for fish shell
-curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher
-
-# Install plugins using Fisher
-fisher install jorgebucaran/nvm.fish
+echo "fish setup complete."
