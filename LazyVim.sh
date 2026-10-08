@@ -1,14 +1,18 @@
 #!/usr/bin/bash
 
+set -euo pipefail
+
 # Detect fish shell and ask user to switch to bash (bash-only syntax)
-if [ -n "${FISH_VERSION:-}" ] || case "$SHELL" in *fish*) ;; *) false ;; esac; then
+if [ -n "${FISH_VERSION:-}" ] || case "${SHELL:-}" in *fish*) ;; *) false ;; esac; then
   echo "Warning: fish shell detected."
   echo "This script is written for bash and may have syntax issues under fish."
   echo "Please switch to bash first and re-run it, e.g.: bash $0"
-  read -r -p "Press Enter to continue anyway, or Ctrl+C to cancel..." </dev/tty || true
+  if [ -t 0 ] && [ -e /dev/tty ]; then
+    read -r -p "Press Enter to continue anyway, or Ctrl+C to cancel..." </dev/tty || true
+  fi
 fi
 
-# Install prerequisetes
+# Install prerequisites
 if command -v pacman >/dev/null; then
   echo "pacman detected. Installing prerequisites"
   # sclip is not packaged for arch, tree-sitter-cli ships the tree-sitter binary
@@ -48,61 +52,34 @@ elif command -v apt >/dev/null; then
 else
   echo "Cannot proceed: pacman or apt is required"
   echo "This script supports arch based and debian based systems"
-  echo "+ sleep 10" && sleep 10
   exit 1
 fi
 
 echo ""
-echo 'This script will move your current nvim config to ~/.config/nvim.bak'
-echo "Press CTRL+C within 10 secconds if you don't want these actions to be made"
-sleep 10
+echo 'This script will back up your current nvim config with a timestamped name, e.g. ~/.config/nvim.bak-20261008-130000'
+if [ -t 0 ]; then
+  echo "Press CTRL+C within 10 seconds if you don't want these actions to be made"
+  sleep 10
+fi
 echo ""
 
-# Remove old backups
-# Remove existing .bak directories first to ensure a clean slate
-echo "   Checking for and removing old Neovim backup directories..."
+# Back up current nvim directories with a timestamp so a re-run never
+# destroys the user's original backup (old behaviour deleted *.bak first)
+STAMP="$(date +%Y%m%d-%H%M%S)"
 
-# Use $HOME for reliable path expansion
-if [ -e "$HOME/.config/nvim.bak" ]; then
-  echo "Path $HOME/.config/nvim.bak exists. Removing..."
-  rm -rf "$HOME/.config/nvim.bak"
-fi
+backup_if_exists() {
+  local src="$1"
+  if [ -e "$src" ]; then
+    echo "   Backing up $src -> ${src}.bak-$STAMP"
+    mv "$src" "${src}.bak-$STAMP"
+  fi
+}
 
-if [ -e "$HOME/.local/share/nvim.bak" ]; then
-  echo "Path $HOME/.local/share/nvim.bak exists. Removing..."
-  rm -rf "$HOME/.local/share/nvim.bak"
-fi
-
-if [ -e "$HOME/.local/state/nvim.bak" ]; then
-  echo "Path $HOME/.local/state/nvim.bak exists. Removing..."
-  rm -rf "$HOME/.local/state/nvim.bak"
-fi
-
-if [ -e "$HOME/.cache/nvim.bak" ]; then
-  echo "Path $HOME/.cache/nvim.bak exists. Removing..."
-  rm -rf "$HOME/.cache/nvim.bak"
-fi
-
-# Remove the current nvim config and create a new backup
-echo ""
 echo "   Backing up current Neovim configuration..."
-if [ -d "$HOME/.config/nvim" ]; then # Check if nvim config exists before moving
-  mv "$HOME/.config/nvim" "$HOME/.config/nvim.bak"
-else
-  echo "No existing ~/.config/nvim found to back up."
-fi
-
-echo ""
-echo "   Backing up Neovim share, state, and cache directories..."
-if [ -d "$HOME/.local/share/nvim" ]; then
-  mv "$HOME/.local/share/nvim" "$HOME/.local/share/nvim.bak"
-fi
-if [ -d "$HOME/.local/state/nvim" ]; then
-  mv "$HOME/.local/state/nvim" "$HOME/.local/state/nvim.bak"
-fi
-if [ -d "$HOME/.cache/nvim" ]; then
-  mv "$HOME/.cache/nvim" "$HOME/.cache/nvim.bak"
-fi
+backup_if_exists "$HOME/.config/nvim"
+backup_if_exists "$HOME/.local/share/nvim"
+backup_if_exists "$HOME/.local/state/nvim"
+backup_if_exists "$HOME/.cache/nvim"
 
 # Remove any leftover
 if [ -e "$HOME/.config/.nvim" ]; then
@@ -113,51 +90,90 @@ fi
 
 # Install LazyVim
 echo ""
-git clone https://github.com/alvinlollo/LazyVim ~/.config/nvim
-
-# Check if nvm is in shell path
-if command -v nvm &>/dev/null; then
-  # Get current shell name
-  CURRENT_SHELL=$(basename -- "$SHELL")
-
-  # 2. Source the correct configuration file safely
-  if [ "$CURRENT_SHELL" = "fish" ] && [ -f ~/.bashrc ]; then
-
-    # Check if fish is installed first, then check for fisher
-    if command -v fish &>/dev/null && fish -c "functions -q fisher" &>/dev/null; then
-      fisher install jorgebucaran/nvm.fish
-      source ~/.config/fish/config.fish
-    else
-      curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-      fisher install jorgebucaran/fisher
-      fisher install jorgebucaran/nvm.fish
-      source ~/.config/fish/config.fish
-    fi
-
-  elif [ "$CURRENT_SHELL" = "zsh" ] && [ -f ~/.zshrc ]; then
-
-    echo -e "export NVM_DIR=\"$HOME/.nvm\"\n[ -s \"/usr/share/nvm/nvm.sh\" ] && \. \"/usr/share/nvm/nvm.sh\"\n[ -s \"/usr/share/nvm/init-nvm.sh\" ] && \. \"/usr/share/nvm/init-nvm.sh\"" >>~/.zshrc
-    source ~/.zshrc
-
-  elif [ "$CURRENT_SHELL" = "bash" ] && [ -f ~/.config/fish/config.fish ]; then
-
-    echo "source /usr/share/nvm/init-nvm.sh" >>~/.bashrc
-    source ~/.bashrc
-
-  else
-    echo "Unsupported or unreadable shell configuration: $CURRENT_SHELL"
-    echo "Failed to add NVM to shell path. Please add it manually to your shell configuration file."
-  fi
+if ! git clone https://github.com/alvinlollo/LazyVim "$HOME/.config/nvim"; then
+  echo "error: failed to clone https://github.com/alvinlollo/LazyVim into ~/.config/nvim" >&2
+  echo "Your previous config is preserved in ~/.config/nvim.bak-$STAMP (if one existed)." >&2
+  exit 1
 fi
 
-# Use NVM to install the latest LTS version of Node.js
-if command -v nvm &>/dev/null; then
+# Load nvm into this shell if it exists. nvm is a shell function, so
+# 'command -v nvm' only works after its init script has been sourced.
+NVM_LOADED=false
+for nvm_init in "$HOME/.nvm/nvm.sh" /usr/share/nvm/nvm.sh /usr/share/nvm/init-nvm.sh; do
+  if [ -f "$nvm_init" ]; then
+    set +u # nvm's init script is not always nounset-safe
+    # shellcheck disable=SC1090
+    if ! . "$nvm_init"; then
+      set -u
+      continue # try the next candidate
+    fi
+    set -u
+    NVM_LOADED=true
+    break
+  fi
+done
+
+CURRENT_SHELL=$(basename -- "${SHELL:-/bin/bash}")
+
+case "$CURRENT_SHELL" in
+fish)
+  # fish cannot source nvm.sh - it uses the nvm.fish plugin instead
+  if [ -f "$HOME/.config/fish/config.fish" ]; then
+    if ! fish -c 'type -q fisher' 2>/dev/null; then
+      fisher_src="$(mktemp)"
+      if ! curl -fsSL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish -o "$fisher_src"; then
+        echo "error: failed to download fisher.fish" >&2
+        rm -f "$fisher_src"
+        exit 1
+      fi
+      fish -c "source '$fisher_src' && fisher install jorgebucaran/fisher"
+      rm -f "$fisher_src"
+    fi
+    fish -c 'fisher install jorgebucaran/nvm.fish'
+  else
+    echo "No ~/.config/fish/config.fish found, skipping fish plugin setup"
+  fi
+  ;;
+zsh)
+  if [ -f "$HOME/.zshrc" ]; then
+    if ! grep -q 'nvm.sh' "$HOME/.zshrc"; then
+      printf '%s\n' \
+        'export NVM_DIR="$HOME/.nvm"' \
+        '[ -s "/usr/share/nvm/nvm.sh" ] && . "/usr/share/nvm/nvm.sh"' \
+        '[ -s "/usr/share/nvm/init-nvm.sh" ] && . "/usr/share/nvm/init-nvm.sh"' >>"$HOME/.zshrc"
+    fi
+  else
+    echo "No ~/.zshrc found, skipping nvm shell wiring"
+  fi
+  ;;
+bash)
+  if [ -f "$HOME/.bashrc" ]; then
+    if ! grep -q 'nvm.sh\|init-nvm.sh' "$HOME/.bashrc"; then
+      printf '%s\n' \
+        'export NVM_DIR="$HOME/.nvm"' \
+        '[ -s "/usr/share/nvm/nvm.sh" ] && . "/usr/share/nvm/nvm.sh"' \
+        '[ -s "/usr/share/nvm/init-nvm.sh" ] && . "/usr/share/nvm/init-nvm.sh"' >>"$HOME/.bashrc"
+    fi
+  else
+    echo "No ~/.bashrc found, skipping nvm shell wiring"
+  fi
+  ;;
+*)
+  echo "Unsupported or unreadable shell configuration: $CURRENT_SHELL"
+  echo "Failed to add NVM to shell path. Please add it manually to your shell configuration file."
+  ;;
+esac
+
+# Use nvm (when loaded) to install the latest LTS version of Node.js
+if [ "$NVM_LOADED" = true ]; then
   nvm install lts
   nvm use lts
 elif command -v node >/dev/null; then
-  echo "nvm not found, using system Node.js $(node --version)"
+  echo "nvm not available, using system Node.js $(node --version)"
 else
   echo "No Node.js installation found."
-  echo "Source your nvm install (e.g. . /usr/share/nvm/nvm.sh) or install nodejs, then re-run this script."
+  echo "Install nvm (Arch: pacman -S nvm) or nodejs, then re-run this script."
   exit 1
 fi
+
+echo "LazyVim setup complete."
