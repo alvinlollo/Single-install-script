@@ -1,12 +1,17 @@
 #!/usr/bin/bash
 
+# Strict mode from the very start: every tolerated failure in this script is
+# an explicit guard (if ! / || record_failure), so preamble steps are checked
+# too. -E (errtrace) makes the ERR trap fire inside helper functions as well.
+set -Eeuo pipefail
+
 skip_watermark=false
-if [ "$1" = "--skip-watermark" ]; then
+if [ "${1:-}" = "--skip-watermark" ]; then
   skip_watermark=true
 fi
 
 # Detect fish shell and warn user to run with bash instead (bash-only syntax)
-if [ -n "${FISH_VERSION:-}" ] || case "$SHELL" in *fish*) ;; *) false ;; esac then
+if [ -n "${FISH_VERSION:-}" ] || case "${SHELL:-}" in *fish*) ;; *) false ;; esac; then
   if command -v gum >/dev/null; then
     if ! gum confirm "$(printf 'Your default shell appears to be fish.\n\nThis script must be run with bash. It uses bash-only syntax and will fail under fish.\n\nRun it with:\n  bash installbeta.sh\n\nContinue anyway?')"; then
       echo "Aborted. Please run this script with bash, not fish. e.g.: bash installbeta.sh"
@@ -16,12 +21,14 @@ if [ -n "${FISH_VERSION:-}" ] || case "$SHELL" in *fish*) ;; *) false ;; esac th
     echo "Warning: fish shell detected."
     echo "This script must be run with bash, not fish (bash-only syntax)."
     echo "Please run it with bash, e.g.: bash installbeta.sh"
-    read -r -p "Press Enter to continue anyway, or Ctrl+C to cancel..." </dev/tty || true
+    if [ -t 0 ] && [ -e /dev/tty ]; then
+      read -r -p "Press Enter to continue anyway, or Ctrl+C to cancel..." </dev/tty || true
+    fi
   fi
 fi
 
 if [ "$skip_watermark" = false ]; then
-  clear
+  clear 2>/dev/null || true
   echo '
      ____                _       _       _       _ _
     | __ ) _   _    __ _| |_   _(_)_ __ | | ___ | | | ___
@@ -37,23 +44,32 @@ See the LICENCE for more detail
 '
 fi
 
-# Function to display error message
+# Report errors with context (line + failing command), and only once strict
+# mode is active so preamble failures abort instead of printing and continuing
 function error_handler() {
+  local rc="$1" line="$2" cmd="$3"
   set +x
-  echo -e "An error occurred. Please check the output above for details."
+  echo ""
+  echo "An error occurred (exit status $rc) at line $line while running:"
+  echo "  $cmd"
+  echo "Please check the output above for details."
 }
 
-# Trap errors
-trap error_handler ERR
+# Trap errors (after set -euo pipefail above)
+trap 'error_handler "$?" "$LINENO" "$BASH_COMMAND"' ERR
 
 # --- Failure handling & full console log ------------------------------------
 # Everything from here on is teed to a log file in /tmp, and Arch-only step
 # failures are recorded instead of aborting the rest of the installation.
 TTY_OK=false
-[ -t 1 ] && TTY_OK=true
+if [ -t 1 ]; then
+  TTY_OK=true
+fi
 
-LOG="/tmp/installbeta-$(date +%Y%m%d-%H%M%S).log"
-REPORT="/tmp/installbeta-failures-$(date +%Y%m%d-%H%M%S).txt"
+# One timestamp for both files, mktemp so the names are not predictable
+STAMP="$(date +%Y%m%d-%H%M%S)"
+LOG="$(mktemp "/tmp/installbeta-$STAMP-XXXXXX.log")"
+REPORT="$(mktemp "/tmp/installbeta-failures-$STAMP-XXXXXX.txt")"
 FAILED=()
 
 exec > >(tee -a "$LOG") 2>&1
@@ -78,6 +94,14 @@ record_failure() {
 # are a symlink attack vector on multi-user systems; the trap cleans up too.
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
+
+# Resolve where this script lives so local script/config fallbacks do not
+# depend on the caller's current directory. Empty when piped (curl | bash).
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+  SCRIPT_DIR=""
+fi
 
 # Install shelly as a dependency if not present (Arch-based)
 if command -v pacman >/dev/null; then
@@ -217,9 +241,6 @@ fi
 echo "User selected:"
 echo "$CHOICE"
 
-# Fail on any command.
-set -euo pipefail
-
 # Process selected options in menu order
 while IFS= read -r selection; do
   # Skip options the user did not select
@@ -227,38 +248,50 @@ while IFS= read -r selection; do
   case "$selection" in
   "Run zsh setup script")
     echo "Running zsh setup script..."
-    # Runs local script unless it does not exist or fails
-    if [[ -f "zsh.sh" ]]; then
+    # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
+    if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/zsh.sh" ]; then
       echo "Found local script, running..."
-      bash zsh.sh --skip-watermark ||
-        record_failure "Run zsh setup script" "zsh.sh exited with status $?"
+      bash "$SCRIPT_DIR/zsh.sh" --skip-watermark || {
+        rc=$?
+        record_failure "Run zsh setup script" "zsh.sh exited with status $rc"
+      }
     else
-      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | bash -s -- --skip-watermark ||
-        record_failure "Run zsh setup script" "downloaded zsh.sh exited with status $?"
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | bash -s -- --skip-watermark || {
+        rc=$?
+        record_failure "Run zsh setup script" "downloaded zsh.sh exited with status $rc"
+      }
     fi
     ;;
   "Run fish setup script")
     echo "Running fish setup script..."
-    # Runs local script unless it does not exist or fails
-    if [[ -f "fish.sh" ]]; then
+    # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
+    if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/fish.sh" ]; then
       echo "Found local script, running..."
-      bash fish.sh --skip-watermark ||
-        record_failure "Run fish setup script" "fish.sh exited with status $?"
+      bash "$SCRIPT_DIR/fish.sh" --skip-watermark || {
+        rc=$?
+        record_failure "Run fish setup script" "fish.sh exited with status $rc"
+      }
     else
-      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/fish.sh | bash -s -- --skip-watermark ||
-        record_failure "Run fish setup script" "downloaded fish.sh exited with status $?"
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/fish.sh | bash -s -- --skip-watermark || {
+        rc=$?
+        record_failure "Run fish setup script" "downloaded fish.sh exited with status $rc"
+      }
     fi
     ;;
   "Run LazyVim setup script")
     echo "Running LazyVim setup script..."
-    # Runs local script unless it does not exist or fails
-    if [[ -f "LazyVim.sh" ]]; then
+    # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
+    if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/LazyVim.sh" ]; then
       echo "Found local script, running..."
-      bash LazyVim.sh ||
-        record_failure "Run LazyVim setup script" "LazyVim.sh exited with status $?"
+      bash "$SCRIPT_DIR/LazyVim.sh" || {
+        rc=$?
+        record_failure "Run LazyVim setup script" "LazyVim.sh exited with status $rc"
+      }
     else
-      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/LazyVim.sh | bash ||
-        record_failure "Run LazyVim setup script" "downloaded LazyVim.sh exited with status $?"
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/LazyVim.sh | bash || {
+        rc=$?
+        record_failure "Run LazyVim setup script" "downloaded LazyVim.sh exited with status $rc"
+      }
     fi
     ;;
   "Install Docker")
@@ -287,11 +320,13 @@ while IFS= read -r selection; do
       echo "Cannot proceed: shelly binary not found (Arch-only)"
       record_failure "Install Standard Packages (Shelly)" "shelly binary not found (Arch-only)"
     # Install standard packages from shelly backup
-    # Runs local script unless it does not exist or fails
-    elif [[ -f "./configs/shelly-standard.toml" ]]; then
+    # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
+    elif [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/configs/shelly-standard.toml" ]; then
       echo "Found local backup"
-      shelly backup --import --name shelly-standard --directory ./configs --no-confirm ||
-        record_failure "Install Standard Packages (Shelly)" "shelly backup import exited with status $?"
+      shelly backup --import --name shelly-standard --directory "$SCRIPT_DIR/configs" --no-confirm || {
+        rc=$?
+        record_failure "Install Standard Packages (Shelly)" "shelly backup import exited with status $rc"
+      }
     elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-standard.toml -o "$WORK_DIR/shelly-standard.toml"; then
       echo "--------------------------------------------------------------------"
       echo "Failed to download shelly backup. You can try running it manually:"
@@ -315,11 +350,13 @@ while IFS= read -r selection; do
       echo "Cannot proceed: shelly binary not found (Arch-only)"
       record_failure "Install AUR Packages (Shelly)" "shelly binary not found (Arch-only)"
     # Install AUR packages from shelly backup
-    # Runs local script unless it does not exist or fails
-    elif [[ -f "./configs/shelly-aur.toml" ]]; then
+    # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
+    elif [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/configs/shelly-aur.toml" ]; then
       echo "Found local backup"
-      shelly backup --import --name shelly-aur --directory ./configs --no-confirm ||
-        record_failure "Install AUR Packages (Shelly)" "shelly backup import exited with status $?"
+      shelly backup --import --name shelly-aur --directory "$SCRIPT_DIR/configs" --no-confirm || {
+        rc=$?
+        record_failure "Install AUR Packages (Shelly)" "shelly backup import exited with status $rc"
+      }
     elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-aur.toml -o "$WORK_DIR/shelly-aur.toml"; then
       echo "--------------------------------------------------------------------"
       echo "Failed to download shelly backup. You can try running it manually:"
@@ -367,14 +404,18 @@ while IFS= read -r selection; do
     ;;
   "Run bat setup script")
     echo "Running bat setup script..."
-    # Runs local script unless it does not exist or fails
-    if [[ -f "bat.sh" ]]; then
+    # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
+    if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/bat.sh" ]; then
       echo "Found local script, running..."
-      bash bat.sh --skip-watermark ||
-        record_failure "Run bat setup script" "bat.sh exited with status $?"
+      bash "$SCRIPT_DIR/bat.sh" --skip-watermark || {
+        rc=$?
+        record_failure "Run bat setup script" "bat.sh exited with status $rc"
+      }
     else
-      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/bat.sh | bash -s -- --skip-watermark ||
-        record_failure "Run bat setup script" "downloaded bat.sh exited with status $?"
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/bat.sh | bash -s -- --skip-watermark || {
+        rc=$?
+        record_failure "Run bat setup script" "downloaded bat.sh exited with status $rc"
+      }
     fi
     ;;
   *)
@@ -401,8 +442,10 @@ if [ "${#FAILED[@]}" -gt 0 ]; then
   if [ "$TTY_OK" = true ] && command -v gum >/dev/null; then
     gum_tty pager < "$REPORT" || true
   fi
-else
-  echo "All steps completed with no failures."
+
+  # Non-zero so callers and CI can detect the failed run
+  exit 1
 fi
 
+echo "All steps completed with no failures."
 exit 0
