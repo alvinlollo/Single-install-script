@@ -1,6 +1,5 @@
 #!/usr/bin/bash
 
-PreviousWD=$(pwd)
 skip_watermark=false
 if [ "$1" = "--skip-watermark" ]; then
   skip_watermark=true
@@ -75,6 +74,11 @@ record_failure() {
   echo "$(date '+%F %T')  $1 — $2" >>"$REPORT"
 }
 
+# Private temp workspace for downloads and clones. Predictable names in /tmp
+# are a symlink attack vector on multi-user systems; the trap cleans up too.
+WORK_DIR="$(mktemp -d)"
+trap 'rm -rf "$WORK_DIR"' EXIT
+
 # Install shelly as a dependency if not present (Arch-based)
 if command -v pacman >/dev/null; then
   # Install build prerequisites for shelly
@@ -88,21 +92,19 @@ if command -v pacman >/dev/null; then
   # Check if shelly binary exists
   if ! command -v shelly >/dev/null; then
     echo "shelly is NOT installed. Running installation commands..."
-    if ! git clone https://aur.archlinux.org/shelly.git /tmp/shelly_install; then
+    if ! git clone https://aur.archlinux.org/shelly.git "$WORK_DIR/shelly"; then
       echo "--------------------------------------------------------------------"
       echo "Failed to clone shelly repository. You can try running it manually:"
-      echo "git clone https://aur.archlinux.org/shelly.git /tmp/shelly_install"
+      echo "git clone https://aur.archlinux.org/shelly.git \"$WORK_DIR/shelly\""
       echo "--------------------------------------------------------------------"
       record_failure "Shelly bootstrap (Arch-only)" "failed to clone the shelly AUR repository"
-    elif ! (cd /tmp/shelly_install && makepkg -si --noconfirm); then
+    elif ! (cd "$WORK_DIR/shelly" && makepkg -si --noconfirm); then
       echo "--------------------------------------------------------------------"
       echo "Failed to build and install shelly. You can try running it manually:"
-      echo "cd /tmp/shelly_install && makepkg -si --noconfirm"
+      echo "cd \"$WORK_DIR/shelly\" && makepkg -si --noconfirm"
       echo "--------------------------------------------------------------------"
       record_failure "Shelly bootstrap (Arch-only)" "failed to build shelly with makepkg"
     fi
-    cd "$PreviousWD"
-    rm -rf /tmp/shelly_install
   else
     echo "Shelly is already installed."
   fi
@@ -157,13 +159,60 @@ OPTIONS=(
   "Run bat setup script"
 )
 
-CHOICE=$(gum_tty choose --no-limit --height 14 \
-  --header "Tab = select, Enter = confirm:" \
-  --selected "Run fish setup script,Install Standard Packages (Shelly),Install AUR Packages (Shelly),Run bat setup script" \
-  "${OPTIONS[@]}") || {
-  echo "User cancelled installation."
-  exit 1
+# Present the menu: gum when available, plain numbered fallback otherwise
+# (systems with neither shelly nor apt never get gum installed - the menu
+# must still work there instead of failing with a misleading message)
+select_options() {
+  if command -v gum >/dev/null; then
+    gum_tty choose --no-limit --height 14 \
+      --header "Tab = select, Enter = confirm:" \
+      --selected "Run fish setup script,Install Standard Packages (Shelly),Install AUR Packages (Shelly),Run bat setup script" \
+      "${OPTIONS[@]}"
+    return
+  fi
+
+  echo "gum is not installed and could not be installed on this system." >&2
+  echo "Falling back to a plain numbered menu." >&2
+  local i=1 opt
+  for opt in "${OPTIONS[@]}"; do
+    printf '  %d) %s\n' "$i" "$opt"
+    i=$((i + 1))
+  done
+
+  local reply=""
+  if [ -e /dev/tty ]; then
+    read -r -p "Enter numbers separated by spaces (Enter = cancel): " reply </dev/tty || reply=""
+  else
+    echo "No interactive terminal available, cannot show a menu." >&2
+    return 2
+  fi
+
+  [ -n "$reply" ] || return 1
+
+  local -a picked=()
+  local n
+  for n in $reply; do
+    case "$n" in
+    '' | *[!0-9]*)
+      echo "Invalid selection: $n" >&2
+      return 1
+      ;;
+    esac
+    if [ "$n" -ge 1 ] && [ "$n" -le "${#OPTIONS[@]}" ]; then
+      picked+=("${OPTIONS[$((n - 1))]}")
+    else
+      echo "Selection out of range: $n" >&2
+      return 1
+    fi
+  done
+  [ "${#picked[@]}" -gt 0 ] || return 1
+  printf '%s\n' "${picked[@]}"
 }
+
+if ! CHOICE="$(select_options)"; then
+  echo "No options selected (menu cancelled or unavailable). Nothing was installed."
+  exit 1
+fi
 
 echo "User selected:"
 echo "$CHOICE"
@@ -216,10 +265,14 @@ while IFS= read -r selection; do
     echo "Installing Docker..."
     if ! command -v docker >/dev/null; then
       echo "docker is NOT installed. Installing..."
-      curl -fsSL https://get.docker.com | sh ||
-        record_failure "Install Docker" "docker installer script exited with status $?"
-      sudo usermod -aG docker "$USER" ||
-        record_failure "Install Docker" "adding $USER to the docker group failed"
+      if curl -fsSL https://get.docker.com -o "$WORK_DIR/get-docker.sh" &&
+        sh "$WORK_DIR/get-docker.sh"; then
+        sudo usermod -aG docker "$USER" ||
+          record_failure "Install Docker" "adding $USER to the docker group failed"
+      else
+        rc=$?
+        record_failure "Install Docker" "docker installer script exited with status $rc"
+      fi
     else
       sudo usermod -aG docker "$USER" ||
         record_failure "Install Docker" "adding $USER to the docker group failed"
@@ -239,17 +292,17 @@ while IFS= read -r selection; do
       echo "Found local backup"
       shelly backup --import --name shelly-standard --directory ./configs --no-confirm ||
         record_failure "Install Standard Packages (Shelly)" "shelly backup import exited with status $?"
-    elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-standard.toml -o /tmp/shelly-standard.toml; then
+    elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-standard.toml -o "$WORK_DIR/shelly-standard.toml"; then
       echo "--------------------------------------------------------------------"
       echo "Failed to download shelly backup. You can try running it manually:"
-      echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-standard.toml -o /tmp/shelly-standard.toml"
+      echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-standard.toml -o \"$WORK_DIR/shelly-standard.toml\""
       echo "--------------------------------------------------------------------"
       record_failure "Install Standard Packages (Shelly)" "failed to download shelly-standard.toml"
       echo "+ sleep 10" && sleep 10
-    elif ! shelly backup --import --name shelly-standard --directory /tmp --no-confirm; then
+    elif ! shelly backup --import --name shelly-standard --directory "$WORK_DIR" --no-confirm; then
       echo "--------------------------------------------------------------------"
       echo "Failed to install Standard packages. You can try running it manually:"
-      echo "shelly backup --import --name shelly-standard --directory /tmp --no-confirm"
+      echo "shelly backup --import --name shelly-standard --directory \"$WORK_DIR\" --no-confirm"
       echo "--------------------------------------------------------------------"
       record_failure "Install Standard Packages (Shelly)" "shelly backup import failed"
       echo "+ sleep 10" && sleep 10
@@ -267,17 +320,17 @@ while IFS= read -r selection; do
       echo "Found local backup"
       shelly backup --import --name shelly-aur --directory ./configs --no-confirm ||
         record_failure "Install AUR Packages (Shelly)" "shelly backup import exited with status $?"
-    elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-aur.toml -o /tmp/shelly-aur.toml; then
+    elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-aur.toml -o "$WORK_DIR/shelly-aur.toml"; then
       echo "--------------------------------------------------------------------"
       echo "Failed to download shelly backup. You can try running it manually:"
-      echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-aur.toml -o /tmp/shelly-aur.toml"
+      echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-aur.toml -o \"$WORK_DIR/shelly-aur.toml\""
       echo "--------------------------------------------------------------------"
       record_failure "Install AUR Packages (Shelly)" "failed to download shelly-aur.toml"
       echo "+ sleep 10" && sleep 10
-    elif ! shelly backup --import --name shelly-aur --directory /tmp --no-confirm; then
+    elif ! shelly backup --import --name shelly-aur --directory "$WORK_DIR" --no-confirm; then
       echo "--------------------------------------------------------------------"
       echo "Failed to install AUR packages. You can try running it manually:"
-      echo "shelly backup --import --name shelly-aur --directory /tmp --no-confirm"
+      echo "shelly backup --import --name shelly-aur --directory \"$WORK_DIR\" --no-confirm"
       echo "--------------------------------------------------------------------"
       record_failure "Install AUR Packages (Shelly)" "shelly backup import failed"
       echo "+ sleep 10" && sleep 10
@@ -305,8 +358,12 @@ while IFS= read -r selection; do
     echo "Github repo: https://github.com/ryzendew/Linux-Affinity-Installer"
     echo "+ 10 sleep"
     sleep 10
-    curl -sSL https://raw.githubusercontent.com/ryzendew/AffinityOnLinux/refs/heads/main/AffinityScripts/AffinityLinuxInstaller.py | python3 ||
-      record_failure "Install affinity with GUI" "affinity installer exited with status $?"
+    { curl -fsSL https://raw.githubusercontent.com/ryzendew/AffinityOnLinux/refs/heads/main/AffinityScripts/AffinityLinuxInstaller.py \
+      -o "$WORK_DIR/AffinityLinuxInstaller.py" &&
+      python3 "$WORK_DIR/AffinityLinuxInstaller.py"; } || {
+      rc=$?
+      record_failure "Install affinity with GUI" "affinity installer exited with status $rc"
+    }
     ;;
   "Run bat setup script")
     echo "Running bat setup script..."
