@@ -38,9 +38,9 @@ if [ "$skip_watermark" = false ]; then
             |___/ 
 
     --------------- Single Download script --------------- 
-BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, 
+BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENSE, 
 THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. 
-See the LICENCE for more detail
+See the LICENSE for more detail
 '
 fi
 

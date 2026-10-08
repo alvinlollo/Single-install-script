@@ -25,8 +25,8 @@ echo '
             |___/
 
     --------------- ZSH Install Script ---------------
-  BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENCE, THERE IS NO WARRANTY
-  FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. See the LICENCE for more detail
+  BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE UNDER THE GPL-2.0 LICENSE, THERE IS NO WARRANTY
+  FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. See the LICENSE for more detail
 '
 fi
 
@@ -40,7 +40,7 @@ set -eu
 if ! command -v zsh >/dev/null || ! command -v git >/dev/null || ! command -v curl >/dev/null || ! command -v fzf >/dev/null; then
   if command -v pacman >/dev/null; then
     echo "pacman detected. Installing prerequisites"
-    sudo pacman -S zsh git curl fzf --noconfirm
+    sudo pacman -S --needed --noconfirm zsh git curl fzf
   fi
 
   if command -v apt >/dev/null; then
@@ -67,24 +67,28 @@ echo '
 # Print commands
 set -x
 
-# Disable exit on error
-set +eu
-
-rm -rf ~/.oh-my-zsh
-
-# Enable exit on error
-set -eu
+# Remove an existing oh-my-zsh install, but only when it really is one
+if [ -d "$HOME/.oh-my-zsh" ]; then
+  if [ -f "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]; then
+    echo "Removing existing ~/.oh-my-zsh for a clean install"
+    rm -rf "$HOME/.oh-my-zsh"
+  else
+    echo "warning: ~/.oh-my-zsh exists but does not look like an oh-my-zsh install - leaving it in place" >&2
+  fi
+fi
 
 # Do not print commands
 set +x
 
-# Backup the user's current config before oh-my-zsh overwrites it
+# Backup the user's current config before oh-my-zsh overwrites it.
+# Timestamped so re-running the script never overwrites the previous backup.
 if [ -f "$HOME/.zshrc" ]; then
-  if ! cp "$HOME/.zshrc" "$HOME/.zshrc.bak"; then
-    echo "error: failed to back up $HOME/.zshrc to $HOME/.zshrc.bak" >&2
+  ZSHRC_BACKUP="$HOME/.zshrc.bak-$(date +%Y%m%d-%H%M%S)"
+  if ! cp "$HOME/.zshrc" "$ZSHRC_BACKUP"; then
+    echo "error: failed to back up $HOME/.zshrc to $ZSHRC_BACKUP" >&2
     exit 1
   fi
-  echo "Backed up $HOME/.zshrc to $HOME/.zshrc.bak"
+  echo "Backed up $HOME/.zshrc to $ZSHRC_BACKUP"
 fi
 
 # Install oh-my-zsh without entering zsh
@@ -122,9 +126,9 @@ curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/re
 # Download generic fzf configuration
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.fzf.zsh -o ~/.fzf.zsh
 
-# Setup fzf
-mkdir -p ~/.fzf/shell
-touch ~/.fzf/shell/key-bindings.zsh
+# Setup fzf: the oh-my-zsh fzf-zsh-plugin provides the integration.
+# (Previously an empty ~/.fzf/shell/key-bindings.zsh placeholder was created
+# here - nothing ever sourced it, and it would shadow real bindings.)
 
 # Do not print commands
 set +x
