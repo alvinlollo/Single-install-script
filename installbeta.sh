@@ -310,8 +310,9 @@ while IFS= read -r selection; do
       sudo usermod -aG docker "$USER" ||
         record_failure "Install Docker" "adding $USER to the docker group failed"
       echo "Docker is already installed."
-      echo "+ sleep 10" && sleep 10
     fi
+    echo "NOTE: $USER has been added to the docker group."
+    echo "Log out and back in (or reboot) for the group membership to take effect."
     ;;
   "Install Standard Packages (Shelly)")
     echo "Installing Standard Packages via Shelly backup..."
@@ -333,14 +334,12 @@ while IFS= read -r selection; do
       echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-standard.toml -o \"$WORK_DIR/shelly-standard.toml\""
       echo "--------------------------------------------------------------------"
       record_failure "Install Standard Packages (Shelly)" "failed to download shelly-standard.toml"
-      echo "+ sleep 10" && sleep 10
     elif ! shelly backup --import --name shelly-standard --directory "$WORK_DIR" --no-confirm; then
       echo "--------------------------------------------------------------------"
       echo "Failed to install Standard packages. You can try running it manually:"
       echo "shelly backup --import --name shelly-standard --directory \"$WORK_DIR\" --no-confirm"
       echo "--------------------------------------------------------------------"
       record_failure "Install Standard Packages (Shelly)" "shelly backup import failed"
-      echo "+ sleep 10" && sleep 10
     fi
     ;;
   "Install AUR Packages (Shelly)")
@@ -363,14 +362,12 @@ while IFS= read -r selection; do
       echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-aur.toml -o \"$WORK_DIR/shelly-aur.toml\""
       echo "--------------------------------------------------------------------"
       record_failure "Install AUR Packages (Shelly)" "failed to download shelly-aur.toml"
-      echo "+ sleep 10" && sleep 10
     elif ! shelly backup --import --name shelly-aur --directory "$WORK_DIR" --no-confirm; then
       echo "--------------------------------------------------------------------"
       echo "Failed to install AUR packages. You can try running it manually:"
       echo "shelly backup --import --name shelly-aur --directory \"$WORK_DIR\" --no-confirm"
       echo "--------------------------------------------------------------------"
       record_failure "Install AUR Packages (Shelly)" "shelly backup import failed"
-      echo "+ sleep 10" && sleep 10
     fi
     ;;
   "Install affinity with GUI")
@@ -393,7 +390,7 @@ while IFS= read -r selection; do
     echo "Install affinity with ryzendew's gui installer"
     echo "You must manually select to install in the GUI"
     echo "Github repo: https://github.com/ryzendew/Linux-Affinity-Installer"
-    echo "+ 10 sleep"
+    echo "Starting the GUI installer in 10 seconds - read the notes above first."
     sleep 10
     { curl -fsSL https://raw.githubusercontent.com/ryzendew/AffinityOnLinux/refs/heads/main/AffinityScripts/AffinityLinuxInstaller.py \
       -o "$WORK_DIR/AffinityLinuxInstaller.py" &&
