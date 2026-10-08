@@ -52,11 +52,42 @@ gum_tty() {
   fi
 }
 
+# Errors through gum log (level + colour + timestamp) once gum exists; plain
+# echo before that, since the first record_failure can precede the bootstrap.
+log_error() {
+  if command -v gum >/dev/null; then
+    gum log --level error --time kitchen -- "$*"
+  else
+    echo "!! $*"
+  fi
+}
+
+# Same, for the failures that abort the run. `|| true` because gum exits 1
+# on level fatal, which errexit would otherwise trip over mid-message.
+log_fatal() {
+  if command -v gum >/dev/null; then
+    gum log --level fatal --time kitchen -- "$*" || true
+  else
+    echo "FATAL: $*"
+  fi
+}
+
 # Record a failed step: remember it, print it now, keep installing
 record_failure() {
   FAILED+=("$1 — $2")
-  echo "!! FAILED: $1 — $2  (continuing with the rest of the installation)"
+  log_error "$1 — $2  (continuing with the rest of the installation)"
+  # Plain line, no colour codes: this is what gum pager shows at the end
   echo "$(date '+%F %T')  $1 — $2" >>"$REPORT"
+}
+
+# Installed-package count for the final summary. apt is deliberately not
+# reported: on apt-only systems this prints nothing and no count line shows.
+snapshot_pkg_count() {
+  if command -v pacman >/dev/null; then
+    pacman -Qq 2>/dev/null | wc -l
+  elif command -v rpm >/dev/null; then
+    rpm -qa --qf '%{NAME}\n' 2>/dev/null | wc -l
+  fi
 }
 
 # Private temp workspace for downloads and clones. Predictable names in /tmp
@@ -98,6 +129,10 @@ sudo_keep_alive &
 SUDO_LOOP_PID=$!
 echo "Keeping sudo alive on PID $SUDO_LOOP_PID - refreshing every 250s"
 
+# Baseline for the package count in the final summary (empty on apt-only
+# systems, where no count is reported).
+PKGS_BEFORE="$(snapshot_pkg_count)"
+
 # Install prerequisites
 if command -v shelly >/dev/null; then
   echo "Shelly detected. Installing prerequisites"
@@ -121,7 +156,7 @@ if ! command -v gum >/dev/null; then
   if command -v shelly >/dev/null; then
     echo "shelly detected. Installing gum"
     shelly install standard gum --no-confirm || {
-      echo "Failed to install gum. Exiting."
+      log_fatal "Failed to install gum. Exiting."
       exit 1
     }
   fi
@@ -129,7 +164,7 @@ if ! command -v gum >/dev/null; then
   if command -v apt >/dev/null; then
     echo "apt detected. Installing gum"
     sudo apt install gum -y || {
-      echo "Failed to install gum. Exiting."
+      log_fatal "Failed to install gum. Exiting."
       exit 1
     }
   fi
@@ -140,7 +175,7 @@ if command -v pacman >/dev/null; then
   # Install build prerequisites for shelly
   if ! gum spin --show-error -s dot --title "Install base-devel and git" -- sudo pacman -S --needed --noconfirm base-devel git; then
     echo "--------------------------------------------------------------------"
-    echo "Failed to install prerequisite packages for Shelly. You can try running it manually:"
+    log_error "Failed to install prerequisite packages for Shelly. You can try running it manually:"
     echo "sudo pacman -S --needed --noconfirm base-devel git"
     echo "--------------------------------------------------------------------"
     record_failure "Shelly bootstrap (Arch-only)" "failed to install base-devel/git prerequisites"
@@ -150,13 +185,13 @@ if command -v pacman >/dev/null; then
     echo "shelly is NOT installed. Running installation commands..."
     if ! gum spin --show-error -s dot --title "Clone Shelly from AUR" -- git clone https://aur.archlinux.org/shelly.git "$WORK_DIR/shelly"; then
       echo "--------------------------------------------------------------------"
-      echo "Failed to clone shelly repository. You can try running it manually:"
+      log_error "Failed to clone shelly repository. You can try running it manually:"
       echo "git clone https://aur.archlinux.org/shelly.git \"$WORK_DIR/shelly\""
       echo "--------------------------------------------------------------------"
       record_failure "Shelly bootstrap (Arch-only)" "failed to clone the shelly AUR repository"
     elif ! (cd "$WORK_DIR/shelly" && gum spin --show-error -s dot --title "Install Shelly" makepkg -si --noconfirm); then
       echo "--------------------------------------------------------------------"
-      echo "Failed to build and install shelly. You can try running it manually:"
+      log_error "Failed to build and install shelly. You can try running it manually:"
       echo "cd \"$WORK_DIR/shelly\" && makepkg -si --noconfirm"
       echo "--------------------------------------------------------------------"
       record_failure "Shelly bootstrap (Arch-only)" "failed to build shelly with makepkg"
@@ -169,7 +204,7 @@ fi
 # gum drives every interactive dialog in this script and there is no fallback
 # menu, so a system that ended up without it must abort here.
 if ! command -v gum >/dev/null; then
-  echo "gum is required but could not be installed on this system (no shelly/apt found)." >&2
+  log_fatal "gum is required but could not be installed on this system (no shelly/apt found)."
   echo "Install it manually: https://github.com/charmbracelet/gum" >&2
   exit 1
 fi
@@ -179,7 +214,7 @@ fi
 # instead of falling back to a plain text prompt.
 if [ -n "${FISH_VERSION:-}" ] || case "${SHELL:-}" in *fish*) ;; *) false ;; esac then
   if ! gum_tty confirm "$(printf 'Your default shell appears to be fish.\n\nThis script must be run with bash. It uses bash-only syntax and will fail under fish.\n\nRun it with:\n  bash installbeta.sh\n\nContinue anyway?')"; then
-    echo "Aborted. Please run this script with bash, not fish. e.g.: bash installbeta.sh"
+    log_fatal "Aborted. Please run this script with bash, not fish. e.g.: bash installbeta.sh"
     exit 1
   fi
 fi
@@ -310,13 +345,13 @@ while IFS= read -r selection; do
       }
     elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-standard.toml -o "$WORK_DIR/shelly-standard.toml"; then
       echo "--------------------------------------------------------------------"
-      echo "Failed to download shelly backup. You can try running it manually:"
+      log_error "Failed to download shelly backup. You can try running it manually:"
       echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-standard.toml -o \"$WORK_DIR/shelly-standard.toml\""
       echo "--------------------------------------------------------------------"
       record_failure "Install Standard Packages (Shelly)" "failed to download shelly-standard.toml"
     elif ! shelly backup --import --name shelly-standard --directory "$WORK_DIR" --no-confirm; then
       echo "--------------------------------------------------------------------"
-      echo "Failed to install Standard packages. You can try running it manually:"
+      log_error "Failed to install Standard packages. You can try running it manually:"
       echo "shelly backup --import --name shelly-standard --directory \"$WORK_DIR\" --no-confirm"
       echo "--------------------------------------------------------------------"
       record_failure "Install Standard Packages (Shelly)" "shelly backup import failed"
@@ -339,13 +374,13 @@ while IFS= read -r selection; do
       }
     elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-aur.toml -o "$WORK_DIR/shelly-aur.toml"; then
       echo "--------------------------------------------------------------------"
-      echo "Failed to download shelly backup. You can try running it manually:"
+      log_error "Failed to download shelly backup. You can try running it manually:"
       echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-aur.toml -o \"$WORK_DIR/shelly-aur.toml\""
       echo "--------------------------------------------------------------------"
       record_failure "Install AUR Packages (Shelly)" "failed to download shelly-aur.toml"
     elif ! shelly backup --import --name shelly-aur --directory "$WORK_DIR" --no-confirm; then
       echo "--------------------------------------------------------------------"
-      echo "Failed to install AUR packages. You can try running it manually:"
+      log_error "Failed to install AUR packages. You can try running it manually:"
       echo "shelly backup --import --name shelly-aur --directory \"$WORK_DIR\" --no-confirm"
       echo "--------------------------------------------------------------------"
       record_failure "Install AUR Packages (Shelly)" "shelly backup import failed"
@@ -398,7 +433,7 @@ while IFS= read -r selection; do
     fi
     ;;
   *)
-    echo "Invalid option selected: $selection"
+    log_error "Invalid option selected: $selection"
     ;;
   esac
 done < <(printf '%s\n' "${OPTIONS[@]}")
@@ -428,6 +463,16 @@ fi
 
 echo "================ INSTALL SUMMARY ================"
 echo "installbeta.sh finished at $(date '+%F %T') - ${#FAILED[@]} step(s) failed:"
+if [ -n "$PKGS_BEFORE" ]; then
+  PKG_DELTA=$(($(snapshot_pkg_count) - PKGS_BEFORE))
+  if [ "$PKG_DELTA" -gt 0 ]; then
+    echo "Packages added: $PKG_DELTA"
+  elif [ "$PKG_DELTA" -lt 0 ]; then
+    echo "Packages removed: $((-PKG_DELTA))"
+  else
+    echo "Packages added: 0 (no net change)"
+  fi
+fi
 echo ""
 echo "Full console log: /tmp/installbeta-$STAMP-XXXXXX.log"
 echo "Failure report:   $REPORT"
