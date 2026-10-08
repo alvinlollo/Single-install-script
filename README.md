@@ -29,6 +29,35 @@ For installing zsh and themes (also works on Debian based systems):
 curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | bash
 ```
 
+> **Note:** on Debian-based systems the installer runs `apt full-upgrade -y` as part of its prerequisites. On Arch it installs prerequisites through shelly without upgrading the whole system.
+
+## Scripts
+
+| Script         | Purpose                                                                 |
+| -------------- | ----------------------------------------------------------------------- |
+| `install.sh`   | Main menu (gum) that dispatches to the scripts below.                    |
+| `installbeta.sh` | Same menu, but logs every step and records failures instead of aborting, then exits non-zero if anything failed. This is the next `install.sh` — once tested it replaces it. |
+| `zsh.sh`       | zsh + oh-my-zsh + plugins and my config (also works on Debian).         |
+| `fish.sh`      | fish + Fisher plugins + end-4 dotfiles config.                          |
+| `LazyVim.sh`   | My LazyVim neovim config.                                               |
+| `bat.sh`       | bat + Catppuccin Mocha theme + MANPAGER setup.                          |
+| `SecureBoot.sh`| **Not in the menu** (intentional): manual UEFI-only Secure Boot setup with `sbctl`. It verifies every sign target and asks before enrolling keys — read it before running. |
+
+## Development
+
+Enable the pre-push gate once per clone (runs `bash -n` and `shellcheck` on every tracked `*.sh`):
+
+```bash
+git config core.hooksPath hooks
+```
+
+There is also a manual end-to-end smoke test that runs the installers in a throwaway Arch container (needs docker or podman, network access; **not** part of the hook):
+
+```bash
+tests/smoke.sh                 # bat.sh, zsh.sh, fish.sh
+tests/smoke.sh LazyVim.sh      # opt in to the heavy LazyVim run
+```
+
 ## Zsh configuration
 
 My Zsh configuration includes the following plugins run through [oh-my-zsh](https://ohmyz.sh/): git, [zsh-history-substring-search](https://github.com/zsh-users/zsh-history-substring-search), [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions), [zsh-autocomplete](https://github.com/marlonrichert/zsh-autocomplete), [fzf-zsh-plugin](https://github.com/unixorn/fzf-zsh-plugin) and [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting.git)

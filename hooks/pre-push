@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Pre-push gate: syntax-check and shellcheck every tracked shell script.
+# Enable once per clone with:  git config core.hooksPath hooks
+# Bypass a single push with:   git push --no-verify
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+mapfile -t scripts < <(git ls-files '*.sh')
+if [ "${#scripts[@]}" -eq 0 ]; then
+  echo "pre-push: no tracked shell scripts found" >&2
+  exit 0
+fi
+
+status=0
+
+for f in "${scripts[@]}"; do
+  if ! bash -n "$f"; then
+    echo "pre-push: bash -n FAILED for $f" >&2
+    status=1
+  fi
+done
+
+if ! command -v shellcheck >/dev/null; then
+  echo "pre-push: shellcheck is not installed - the gate cannot run." >&2
+  echo "  install it (e.g. 'pacman -S shellcheck' or 'apt install shellcheck')" >&2
+  echo "  or bypass this once with: git push --no-verify" >&2
+  exit 1
+fi
+
+# SC1090 (can't follow non-constant source) is excluded: every 'source ~/.bashrc'
+# style call in these scripts triggers it and it is not actionable.
+if ! shellcheck -S warning -e SC1090 "${scripts[@]}"; then
+  echo "pre-push: shellcheck reported problems (see above)" >&2
+  status=1
+fi
+
+if [ "$status" -eq 0 ]; then
+  echo "pre-push: all ${#scripts[@]} shell scripts pass bash -n + shellcheck"
+fi
+exit "$status"

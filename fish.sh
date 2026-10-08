@@ -98,13 +98,19 @@ if [ -n "$SCRIPT_DIR" ] && [ -d "$SCRIPT_DIR/configs" ]; then
   done
 fi
 
-# Run end-4 setup script with flags to skip unnecessary components
+# Run end-4 setup script with flags to skip unnecessary components.
+# SKIP_END4_SETUP=1 is a test hook used by tests/smoke.sh to validate this
+# script's own logic without running end-4's heavyweight installer.
 echo "WARNING: the end-4 installer runs with --force and --skip-backup;"
 echo "it may overwrite an existing Hyprland configuration without a backup."
-(
-  cd "$WORK_DIR/dots-hyprland"
-  ./setup install --force --skip-plasmaintg --skip-backup --skip-quickshell --skip-hyprland --skip-hyprland-entry
-)
+if [ "${SKIP_END4_SETUP:-0}" = "1" ]; then
+  echo "(SKIP_END4_SETUP=1 - skipping the end-4 installer)"
+else
+  (
+    cd "$WORK_DIR/dots-hyprland"
+    ./setup install --force --skip-plasmaintg --skip-backup --skip-quickshell --skip-hyprland --skip-hyprland-entry
+  )
+fi
 
 # Resolve a config file: prefer this repo's copy, fall back to the end-4 clone
 cfg_src() {
