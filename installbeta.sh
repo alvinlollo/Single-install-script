@@ -52,6 +52,28 @@ gum_tty() {
   fi
 }
 
+# Run a long non-interactive step behind a spinner when gum exists, plain
+# otherwise: the shelly bootstrap below must work on a system that has no gum
+# yet. Routed through gum_tty so spinner escape codes stay out of $LOG.
+run_step() {
+  local title="$1" out rc=0
+  shift
+  if ! command -v gum >/dev/null; then
+    "$@"
+    return
+  fi
+  # gum spin --show-error would print the step's errors on gum's stderr, which
+  # gum_tty sends to the terminal only. Capture the output here instead and
+  # replay it on failure through stdout, so the cause also lands in $LOG.
+  out="$(mktemp "$WORK_DIR/step-XXXXXX.out")"
+  gum_tty spin -s dot --title "$title" -- bash -c '"$@" >"$0" 2>&1' "$out" "$@" || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    cat "$out"
+  fi
+  rm -f "$out"
+  return "$rc"
+}
+
 # Errors through gum log (level + colour + timestamp) once gum exists; plain
 # echo before that, since the first record_failure can precede the bootstrap.
 log_error() {
@@ -80,6 +102,31 @@ record_failure() {
   echo "$(date '+%F %T')  $1 — $2" >>"$REPORT"
 }
 
+# Run a command; if it fails, print that exact command as a retry hint and
+# record the failure. The hint is built from the arguments, so it cannot drift
+# from what actually ran. Pass --spin TITLE first to run it via run_step.
+# Usage: try_step STEP REASON MESSAGE [--spin TITLE] CMD...
+try_step() {
+  local step="$1" reason="$2" message="$3" title="" hint
+  shift 3
+  if [ "$1" = "--spin" ]; then
+    title="$2"
+    shift 2
+  fi
+  if [ -n "$title" ]; then
+    run_step "$title" "$@" && return 0
+  else
+    "$@" && return 0
+  fi
+  printf -v hint '%q ' "$@"
+  echo "--------------------------------------------------------------------"
+  log_error "$message You can try running it manually:"
+  echo "${hint% }"
+  echo "--------------------------------------------------------------------"
+  record_failure "$step" "$reason"
+  return 1
+}
+
 # Installed-package count for the final summary. apt is deliberately not
 # reported: on apt-only systems this prints nothing and no count line shows.
 snapshot_pkg_count() {
@@ -99,6 +146,7 @@ WORK_DIR="$(mktemp -d)"
 # script bails out before the loop starts, hence the default value.
 cleanup() {
   if [ -n "${SUDO_LOOP_PID:-}" ]; then
+    # The loop's TERM trap also stops its current `sleep` (see below)
     kill "$SUDO_LOOP_PID" 2>/dev/null || true
   fi
   rm -rf "$WORK_DIR"
@@ -113,30 +161,80 @@ else
   SCRIPT_DIR=""
 fi
 
-sudo -v # Ask for sudo upfront so the user is prompted only once
+# Ask for sudo upfront so the user is prompted only once. A cancelled prompt or
+# a system without sudo aborts here with a clear message instead of an
+# unexplained errexit exit later on.
+if ! sudo -v; then
+  log_fatal "sudo is required to run this installer (password prompt cancelled, or sudo is not available)."
+  exit 1
+fi
 
 # Sudo keep-alive loop
 sudo_keep_alive() {
+  local sleep_pid=""
+  # On TERM (from cleanup) stop the current sleep before exiting, otherwise it
+  # lingers orphaned for up to 250s. Sleeping in the background and waiting
+  # lets the trap fire immediately, and nothing else runs after it.
+  trap 'kill "$sleep_pid" 2>/dev/null; exit' TERM
   while true; do
-    sleep 250
+    sleep 250 &
+    sleep_pid=$!
+    wait "$sleep_pid"
     sudo -n true 2>/dev/null || true
     # $$ is the main script's PID even in this background subshell: exit as
     # soon as the installer is gone, as a backstop for the EXIT trap.
     kill -0 "$$" 2>/dev/null || exit
   done
 }
-sudo_keep_alive &
+# stderr silenced: no "Terminated" report from the loop's killed `sleep` may
+# land in the tee'd log.
+sudo_keep_alive 2>/dev/null &
 SUDO_LOOP_PID=$!
 echo "Keeping sudo alive on PID $SUDO_LOOP_PID - refreshing every 250s"
 
 # Baseline for the package count in the final summary (empty on apt-only
-# systems, where no count is reported).
+# systems, where no count is reported). Taken before the first install step,
+# which is the shelly bootstrap right below.
 PKGS_BEFORE="$(snapshot_pkg_count)"
+
+# Install shelly as a dependency if not present (Arch-based). This runs before
+# any gum use on purpose: on a fresh Arch box gum comes from pacman here, so
+# the bootstrap never depends on gum already being installed (and gum itself
+# cannot be installed without shelly or apt).
+if command -v pacman >/dev/null; then
+  # Install build prerequisites for shelly. Plain command, not run_step: gum
+  # may not exist yet at this point.
+  try_step "Shelly bootstrap (Arch-only)" "failed to install base-devel/git prerequisites" \
+    "Failed to install prerequisite packages for Shelly." \
+    sudo pacman -S --needed --noconfirm base-devel git || true
+  # gum from [extra], so the shelly build below gets a spinner and the rest of
+  # the script has gum even if that build fails. Its own transaction and
+  # non-fatal: a repo set without gum, or a stale sync db pointing at a removed
+  # version, must not take base-devel/git down with it. No -Sy here (that
+  # would be a partial upgrade); the safety net below retries via shelly.
+  if ! command -v gum >/dev/null && ! sudo pacman -S --needed --noconfirm gum; then
+    echo "Could not install gum with pacman - retrying via shelly after the bootstrap."
+  fi
+  # Check if shelly binary exists
+  if ! command -v shelly >/dev/null; then
+    echo "shelly is NOT installed. Running installation commands..."
+    if try_step "Shelly bootstrap (Arch-only)" "failed to clone the shelly AUR repository" \
+      "Failed to clone shelly repository." --spin "Clone Shelly from AUR" \
+      git clone https://aur.archlinux.org/shelly.git "$WORK_DIR/shelly"; then
+      try_step "Shelly bootstrap (Arch-only)" "failed to build shelly with makepkg" \
+        "Failed to build and install shelly." --spin "Install Shelly" \
+        makepkg -D "$WORK_DIR/shelly" -si --noconfirm || true
+    fi
+  else
+    echo "Shelly is already installed."
+  fi
+fi
 
 # Install prerequisites
 if command -v shelly >/dev/null; then
   echo "Shelly detected. Installing prerequisites"
-  shelly install standard base-devel git zsh curl wget libnewt rsync gum --upgrade --no-confirm ||
+  # No gum here: pacman above provides it, the safety net below is the fallback
+  shelly install standard base-devel git zsh curl wget libnewt rsync --upgrade --no-confirm ||
     record_failure "Prerequisites (shelly)" "installing base packages via shelly failed"
 fi
 
@@ -149,7 +247,8 @@ if command -v apt >/dev/null; then
     record_failure "Prerequisites (apt)" "apt install of base packages failed"
 fi
 
-# Ensure gum is installed
+# Ensure gum is installed (safety net: pacman/apt above should already have
+# provided it, but nothing below can run without it)
 if ! command -v gum >/dev/null; then
   echo "gum is not installed. Installing it now..."
 
@@ -167,37 +266,6 @@ if ! command -v gum >/dev/null; then
       log_fatal "Failed to install gum. Exiting."
       exit 1
     }
-  fi
-fi
-
-# Install shelly as a dependency if not present (Arch-based)
-if command -v pacman >/dev/null; then
-  # Install build prerequisites for shelly
-  if ! gum spin --show-error -s dot --title "Install base-devel and git" -- sudo pacman -S --needed --noconfirm base-devel git; then
-    echo "--------------------------------------------------------------------"
-    log_error "Failed to install prerequisite packages for Shelly. You can try running it manually:"
-    echo "sudo pacman -S --needed --noconfirm base-devel git"
-    echo "--------------------------------------------------------------------"
-    record_failure "Shelly bootstrap (Arch-only)" "failed to install base-devel/git prerequisites"
-  fi
-  # Check if shelly binary exists
-  if ! command -v shelly >/dev/null; then
-    echo "shelly is NOT installed. Running installation commands..."
-    if ! gum spin --show-error -s dot --title "Clone Shelly from AUR" -- git clone https://aur.archlinux.org/shelly.git "$WORK_DIR/shelly"; then
-      echo "--------------------------------------------------------------------"
-      log_error "Failed to clone shelly repository. You can try running it manually:"
-      echo "git clone https://aur.archlinux.org/shelly.git \"$WORK_DIR/shelly\""
-      echo "--------------------------------------------------------------------"
-      record_failure "Shelly bootstrap (Arch-only)" "failed to clone the shelly AUR repository"
-    elif ! (cd "$WORK_DIR/shelly" && gum spin --show-error -s dot --title "Install Shelly" makepkg -si --noconfirm); then
-      echo "--------------------------------------------------------------------"
-      log_error "Failed to build and install shelly. You can try running it manually:"
-      echo "cd \"$WORK_DIR/shelly\" && makepkg -si --noconfirm"
-      echo "--------------------------------------------------------------------"
-      record_failure "Shelly bootstrap (Arch-only)" "failed to build shelly with makepkg"
-    fi
-  else
-    echo "Shelly is already installed."
   fi
 fi
 
@@ -261,12 +329,12 @@ while IFS= read -r selection; do
     # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
     if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/zsh.sh" ]; then
       echo "Found local script, running..."
-      gum spin --show-error -s dot --title "Installing zsh with local script" -- bash "$SCRIPT_DIR/zsh.sh" --skip-watermark || {
+      bash "$SCRIPT_DIR/zsh.sh" --skip-watermark || {
         rc=$?
         record_failure "Run zsh setup script" "zsh.sh exited with status $rc"
       }
     else
-      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | gum spin --show-error -s dot --title "Installing zsh" -- bash -s -- --skip-watermark || {
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/zsh.sh | bash -s -- --skip-watermark || {
         rc=$?
         record_failure "Run zsh setup script" "downloaded zsh.sh exited with status $rc"
       }
@@ -278,13 +346,14 @@ while IFS= read -r selection; do
     # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
     if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/fish.sh" ]; then
       echo "Found local script, running..."
-      gum spin --show-error -s dot --title "Installing fish with local script" -- bash "$SCRIPT_DIR/fish.sh" --skip-watermark || {
+      bash "$SCRIPT_DIR/fish.sh" --skip-watermark || {
         rc=$?
         record_failure "Run fish setup script" "fish.sh exited with status $rc"
       }
     else
-      gum spin --show-error -s dot --title "Installing fish shell" \
-        bash -c "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/fish.sh | bash -s -- --skip-watermark" || {
+      # Top-level pipe (like the zsh branch) so set -o pipefail catches a
+      # failed download instead of reporting an empty script as success.
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/fish.sh | bash -s -- --skip-watermark || {
         rc=$?
         record_failure "Run fish setup script" "downloaded fish.sh exited with status $rc"
       }
@@ -330,31 +399,25 @@ while IFS= read -r selection; do
     ;;
   "Install Standard Packages (Shelly)")
     echo "Installing Standard Packages via Shelly backup..."
+    sudo -v
     # Check if shelly binary is installed
     if ! command -v shelly >/dev/null; then
       echo "Cannot proceed: shelly binary not found (Arch-only)"
       record_failure "Install Standard Packages (Shelly)" "shelly binary not found (Arch-only)"
-      # Install standard packages from shelly backup
-      # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
-      sudo -v
+    # Install standard packages from shelly backup
+    # Runs local script unless it does not exist (SCRIPT_DIR, not CWD)
     elif [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/configs/shelly-standard.toml" ]; then
       echo "Found local backup"
       shelly backup --import --name shelly-standard --directory "$SCRIPT_DIR/configs" --no-confirm || {
         rc=$?
         record_failure "Install Standard Packages (Shelly)" "shelly backup import exited with status $rc"
       }
-    elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-standard.toml -o "$WORK_DIR/shelly-standard.toml"; then
-      echo "--------------------------------------------------------------------"
-      log_error "Failed to download shelly backup. You can try running it manually:"
-      echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-standard.toml -o \"$WORK_DIR/shelly-standard.toml\""
-      echo "--------------------------------------------------------------------"
-      record_failure "Install Standard Packages (Shelly)" "failed to download shelly-standard.toml"
-    elif ! shelly backup --import --name shelly-standard --directory "$WORK_DIR" --no-confirm; then
-      echo "--------------------------------------------------------------------"
-      log_error "Failed to install Standard packages. You can try running it manually:"
-      echo "shelly backup --import --name shelly-standard --directory \"$WORK_DIR\" --no-confirm"
-      echo "--------------------------------------------------------------------"
-      record_failure "Install Standard Packages (Shelly)" "shelly backup import failed"
+    elif try_step "Install Standard Packages (Shelly)" "failed to download shelly-standard.toml" \
+      "Failed to download shelly backup." \
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-standard.toml -o "$WORK_DIR/shelly-standard.toml"; then
+      try_step "Install Standard Packages (Shelly)" "shelly backup import failed" \
+        "Failed to install Standard packages." \
+        shelly backup --import --name shelly-standard --directory "$WORK_DIR" --no-confirm || true
     fi
     ;;
   "Install AUR Packages (Shelly)")
@@ -372,18 +435,12 @@ while IFS= read -r selection; do
         rc=$?
         record_failure "Install AUR Packages (Shelly)" "shelly backup import exited with status $rc"
       }
-    elif ! curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-aur.toml -o "$WORK_DIR/shelly-aur.toml"; then
-      echo "--------------------------------------------------------------------"
-      log_error "Failed to download shelly backup. You can try running it manually:"
-      echo "curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-aur.toml -o \"$WORK_DIR/shelly-aur.toml\""
-      echo "--------------------------------------------------------------------"
-      record_failure "Install AUR Packages (Shelly)" "failed to download shelly-aur.toml"
-    elif ! shelly backup --import --name shelly-aur --directory "$WORK_DIR" --no-confirm; then
-      echo "--------------------------------------------------------------------"
-      log_error "Failed to install AUR packages. You can try running it manually:"
-      echo "shelly backup --import --name shelly-aur --directory \"$WORK_DIR\" --no-confirm"
-      echo "--------------------------------------------------------------------"
-      record_failure "Install AUR Packages (Shelly)" "shelly backup import failed"
+    elif try_step "Install AUR Packages (Shelly)" "failed to download shelly-aur.toml" \
+      "Failed to download shelly backup." \
+      curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/shelly-aur.toml -o "$WORK_DIR/shelly-aur.toml"; then
+      try_step "Install AUR Packages (Shelly)" "shelly backup import failed" \
+        "Failed to install AUR packages." \
+        shelly backup --import --name shelly-aur --directory "$WORK_DIR" --no-confirm || true
     fi
     ;;
   "Install affinity with GUI")
@@ -462,7 +519,7 @@ if [ "${#FAILED[@]}" -gt 0 ]; then
 fi
 
 echo "================ INSTALL SUMMARY ================"
-echo "installbeta.sh finished at $(date '+%F %T') - ${#FAILED[@]} step(s) failed:"
+echo "installbeta.sh finished at $(date '+%F %T') - no failures."
 if [ -n "$PKGS_BEFORE" ]; then
   PKG_DELTA=$(($(snapshot_pkg_count) - PKGS_BEFORE))
   if [ "$PKG_DELTA" -gt 0 ]; then
@@ -474,7 +531,7 @@ if [ -n "$PKGS_BEFORE" ]; then
   fi
 fi
 echo ""
-echo "Full console log: /tmp/installbeta-$STAMP-XXXXXX.log"
+echo "Full console log: $LOG"
 echo "Failure report:   $REPORT"
 echo "==================================================="
 
