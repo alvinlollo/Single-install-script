@@ -80,16 +80,19 @@ fi
 # Do not print commands
 set +x
 
-# Backup the user's current config before oh-my-zsh overwrites it.
+# Backup the user's current configs before oh-my-zsh / our downloads overwrite them.
 # Timestamped so re-running the script never overwrites the previous backup.
-if [ -f "$HOME/.zshrc" ]; then
-  ZSHRC_BACKUP="$HOME/.zshrc.bak-$(date +%Y%m%d-%H%M%S)"
-  if ! cp "$HOME/.zshrc" "$ZSHRC_BACKUP"; then
-    echo "error: failed to back up $HOME/.zshrc to $ZSHRC_BACKUP" >&2
-    exit 1
+BACKUP_STAMP="$(date +%Y%m%d-%H%M%S)"
+for cfg in .zshrc .zshenv; do
+  if [ -f "$HOME/$cfg" ]; then
+    cfg_backup="$HOME/$cfg.bak-$BACKUP_STAMP"
+    if ! cp "$HOME/$cfg" "$cfg_backup"; then
+      echo "error: failed to back up $HOME/$cfg to $cfg_backup" >&2
+      exit 1
+    fi
+    echo "Backed up $HOME/$cfg to $cfg_backup"
   fi
-  echo "Backed up $HOME/.zshrc to $ZSHRC_BACKUP"
-fi
+done
 
 # Install oh-my-zsh without entering zsh
 if ! omz_installer=$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh); then
@@ -121,10 +124,12 @@ clone_plugin "$ZSH_CUSTOM_DIR/plugins/zsh-autocomplete" --depth=1 https://github
 
 
 # Download and replace config file
-curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.zshrc -o ~/.zshrc
+CONFIG_BASE_URL="https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs"
+curl -fsSL "$CONFIG_BASE_URL/.zshrc" -o ~/.zshrc
+curl -fsSL "$CONFIG_BASE_URL/.zshenv" -o ~/.zshenv
 
 # Download generic fzf configuration
-curl -fsSL https://raw.githubusercontent.com/alvinlollo/Single-install-script/refs/heads/main/configs/.fzf.zsh -o ~/.fzf.zsh
+curl -fsSL "$CONFIG_BASE_URL/.fzf.zsh" -o ~/.fzf.zsh
 
 # Setup fzf: the oh-my-zsh fzf-zsh-plugin provides the integration.
 # (Previously an empty ~/.fzf/shell/key-bindings.zsh placeholder was created

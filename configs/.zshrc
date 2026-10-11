@@ -18,6 +18,8 @@ fi
 # Path to your oh-my-zsh installation.
   export ZSH=~/.oh-my-zsh
 
+source $ZSH/custom/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+
 # Set the name of the theme to load. If you set this to "random"
 # It'll load a random theme each time that oh-my-zsh is loaded.
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
@@ -79,11 +81,10 @@ plugins=(
 	git
 	zsh-history-substring-search
 	zsh-autosuggestions
- zsh-autocomplete
 #	zsh-eza
 	fzf-zsh-plugin
  	zsh-syntax-highlighting
-	
+
 )
 
 source $ZSH/oh-my-zsh.sh
